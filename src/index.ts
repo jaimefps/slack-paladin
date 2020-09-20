@@ -1,9 +1,11 @@
 require("dotenv").config();
-const { App } = require("@slack/bolt");
-const { handleIntention } = require("./handlers/handle-intention");
-const { getIntention, actorIsAllowed } = require("./helpers");
-const { SLACK_EVENTS } = require("./constants");
-const { db } = require("./database");
+
+import { App } from "@slack/bolt";
+import { handleHelp } from "./handlers/handle-help";
+import { handleIntention } from "./handlers/handle-intention";
+import { getIntention, actorIsAllowed } from "./helpers";
+import { SLACK_EVENTS, ACTION_TYPES } from "./constants";
+import { db } from "./database";
 
 const PORT = 4390 || process.env.PORT;
 
@@ -19,7 +21,7 @@ const bot = new App({
     console.log("context:", context);
     console.log("event:", event);
 
-    const reply = ({ text }) => {
+    const reply = ({ text }: { text: string }) => {
       bot.client.chat.postMessage({
         token: context.botToken,
         channel: event.channel,
@@ -29,8 +31,17 @@ const bot = new App({
     };
 
     try {
-      const actor = await db.findOrCreateUser(event.user);
       const intention = getIntention({ context, event });
+
+      // @ts-ignore
+      if (!ACTION_TYPES[intention.action])
+        throw new Error(
+          "Unknown invocation: " +
+            intention.action +
+            `\n\n${await handleHelp()}`
+        );
+
+      const actor = await db.findOrCreateUser(event.user);
       const hasPermission = await actorIsAllowed({
         intention,
         context,
@@ -43,23 +54,23 @@ const bot = new App({
           `<@${event.user}> does not have permission to do that.`
         );
 
-      await reply({
-        text: await handleIntention({
-          intention,
-          context,
-          event,
-          actor,
-        }),
+      const result = await handleIntention({
+        intention,
+        context,
+        event,
+        actor,
       });
+
+      await reply({ text: result });
     } catch (e) {
       try {
-        const text = `Error: ${e.message}`;
-        await reply({ text });
+        const errMsg = `Error: ${e.message}`;
+        await reply({ text: errMsg });
       } catch (error) {
         console.error(error);
       }
     }
   });
 
-  console.log("⚡️ Bolt app is running!");
+  console.log("⚡ Paladin app is running ⚡");
 })();

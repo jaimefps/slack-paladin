@@ -3,14 +3,22 @@
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "start": "NODE_ENV=development nodemon ./dist/index.js",
+    "start:prod": "NODE_ENV=production node ./dist/index.js"
+  },
   "dependencies": {
     "@slack/bolt": "^2.3.0",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
-    "ngrok": "^3.3.0",
-    "nodemon": "^2.0.4"
+    "mongodb": "^3.6.2"
   },
-  "scripts": {
-    "watch": "nodemon ./src/index.js"
+  "devDependencies": {
+    "@types/mongodb": "^3.5.27",
+    "ngrok": "^3.3.0",
+    "nodemon": "^2.0.4",
+    "typescript": "^4.0.3"
   }
 }

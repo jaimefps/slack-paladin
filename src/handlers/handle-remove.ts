@@ -1,17 +1,20 @@
-const { db, isValidUser } = require("../database");
+import { CascadingData } from "../types";
+import { db, isValidUser } from "../database";
 
-async function handleRemove({ intention: { userId, badge } }) {
+export async function handleRemove({
+  intention: { userId, badge },
+}: CascadingData) {
   const badgeData = await db.findBadgeData(badge);
 
   if (!isValidUser(userId)) {
-    throw new Error("Invalid userId when ACTION_TYPES.grant: " + userId);
+    throw new Error("Invalid userId when removing badge");
   }
+
   if (!badgeData) {
     throw new Error("Unknown badge being granted: " + badge);
   }
 
   const user = await db.findOrCreateUser(userId);
-  user.updatedAt = Date.now();
   const hasBadge = user.badges.includes(badge);
   if (hasBadge) {
     user.badges = user.badges.filter((element) => element !== badge);
@@ -19,7 +22,3 @@ async function handleRemove({ intention: { userId, badge } }) {
   }
   return `<@${userId}> doesn't have that badge`;
 }
-
-module.exports = {
-  handleRemove,
-};

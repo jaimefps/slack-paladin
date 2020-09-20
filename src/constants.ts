@@ -1,23 +1,24 @@
-const SLACK_EVENTS = {
+export const SLACK_EVENTS = {
   app_mention: "app_mention",
 };
 
-const ACTION_TYPES = {
-  exile: "exile", // convert user into villager
-  grant: "grant", // give badge to user
+export const ACTION_TYPES = {
   help: "help", // list commands
   listBadges: "list-badges", // list available badges data
   listDomains: "list-domains", // list domains and their admin/paladins
-  remove: "remove", // remove a badge from user
-  reveal: "reveal", // show a user's permissions and badges
   whoami: "whoami", // show self permissions and badges
+  reveal: "reveal", // show a user's permissions and badges
+  grant: "grant", // give badge to user
+  remove: "remove", // remove a badge from user
+  exile: "exile", // convert user into villager
+  promote: "promote", // promote user into paladin or admin of a domain
 };
 
-const ROLE_TYPES = {
+export const ROLE_TYPES = {
   admin: [Object.values(ACTION_TYPES)],
   paladin: [
     Object.values(ACTION_TYPES).filter(
-      (perm) => perm !== "exiled" || perm !== "promote"
+      (perm) => perm !== "exile" && perm !== "promote"
     ),
   ],
   villager: [
@@ -26,10 +27,4 @@ const ROLE_TYPES = {
     ACTION_TYPES.listBadges,
     ACTION_TYPES.listDomains,
   ],
-};
-
-module.exports = {
-  ACTION_TYPES,
-  ROLE_TYPES,
-  SLACK_EVENTS,
 };

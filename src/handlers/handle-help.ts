@@ -1,4 +1,4 @@
-async function handleHelp() {
+export async function handleHelp() {
   return `These are the invocations I support:
 \`\`\`
 @paladin help
@@ -30,7 +30,3 @@ async function handleHelp() {
 \`\`\`
   `;
 }
-
-module.exports = {
-  handleHelp,
-};
