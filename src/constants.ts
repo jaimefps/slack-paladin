@@ -12,7 +12,7 @@ export const ACTION_TYPES = {
   remove: "remove", // remove a badge from user
   exile: "exile", // convert user into villager
   promote: "promote", // promote user into paladin or admin of a domain
-};
+} as { [k: string]: string };
 
 export const ROLE_TYPES = {
   admin: [Object.values(ACTION_TYPES)],

@@ -1,6 +1,6 @@
 import { ACTION_TYPES } from "./constants";
 import { db } from "./database";
-import { CascadingData, DomainRoles } from "./types";
+import { CascadingData, DomainRoles, Intention } from "./types";
 
 export function getPresentTime() {
   return new Date().toISOString();
@@ -41,7 +41,7 @@ export async function actorIsAllowed({ intention, actor }: CascadingData) {
 }
 
 // <@botname> <action> <@targetUser> <badge|domain>
-export function getIntention({ event: { text } }: CascadingData) {
+export function getIntention({ event: { text } }: CascadingData): Intention {
   // IMPORTANT: badge = badge|domain. // TODO refactor-rename
   // IMPORTANT: userId = user being targeted by action.
   const [, action, user, badge] = text

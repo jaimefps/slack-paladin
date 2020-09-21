@@ -1,6 +1,6 @@
 import { MongoClient } from "mongodb";
 
-export function getDbUri() {
+export function getDBUrl() {
   switch (process.env.NODE_ENV) {
     case "development":
       return process.env.DB_URL_DEV;
@@ -13,16 +13,23 @@ export function getDbUri() {
   }
 }
 
-export const client = new MongoClient(getDbUri(), {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+export function getDBName(): string {
+  switch (process.env.NODE_ENV) {
+    case "development":
+      return "paladin-dev";
+    // case "test":
+    //   return "paladin-test";
+    // case "production":
+    //   return "paladin-prod";
+    default:
+      throw new Error("Failed to pick database name");
+  }
+}
 
-// client.connect(async (err) => {
-//   if (err) console.log("DB ERROR:", err);
-//   const teams = client.db("paladin-dev").collection("teams");
-//   const thisTeam = await teams.findOne({ slackid: "T019P7ZBUBF" });
-//   console.log("thisTeam", thisTeam);
-//   // perform actions on the collection object
-//   client.close();
-// });
+export async function createClient() {
+  const url = getDBUrl();
+  return MongoClient.connect(url, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  });
+}

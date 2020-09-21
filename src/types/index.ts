@@ -1,3 +1,6 @@
+import { Context as SlackContext, SlackEvent } from "@slack/bolt";
+import { Db } from "mongodb";
+
 export interface Intention {
   action: string;
   userId: string;
@@ -8,46 +11,49 @@ export interface Intention {
  * DATABASE Doc interfaces
  */
 export interface DomainRoles {
-  name: String;
-  role: String;
+  name: string;
+  role: string;
 }
 
 export interface TeamDoc {
-  id: String;
-  slackTeam: String;
+  _id: string;
+  slackTeam: string;
   // track spending etc?
 }
 
 export interface DomainDoc {
-  id: string;
-  name: String;
-  slackTeam: String;
+  _id: string;
+  name: string;
+  slackTeam: string;
 }
 
 export interface BadgeDoc {
-  id?: String;
-  emoji?: String;
+  _id?: string;
+  name?: string;
+  emoji?: string;
+  description?: string;
   points?: Number;
-  domains: String[]; // DomainDoc.id
-  slackTeam?: String;
+  domains: string[]; // DomainDoc.id
+  slackTeam?: string;
 }
 
 export interface ActorDoc {
-  id?: String;
-  badges: String[];
+  _id?: string;
+  badges: string[];
   domains: DomainRoles[];
-  slackTeam?: String;
-  slackUser?: String;
+  slackTeam?: string;
+  slackUser: string;
 }
 
 /**
  * TODO delete below interfaces
  */
 export interface CascadingData {
-  context: any;
-  event: any;
-  intention?: Intention;
   actor?: ActorDoc;
+  context: SlackContext;
+  dbSingleton?: Db;
+  event: SlackEvent;
+  intention?: Intention;
 }
 export interface DomainCollection {
   [k: string]: string;

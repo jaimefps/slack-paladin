@@ -29,6 +29,8 @@ const mockUsersCollection: UserCollection = {
       { name: "domain1", role: "admin" },
       { name: "domain2", role: "paladin" },
     ],
+    slackUser: "adsad",
+    slackTeam: "adsds",
   },
 };
 
@@ -54,7 +56,12 @@ export const db = {
     if (!thisUser) {
       console.warn("hardcoded domain in user");
       const mockDomain = { name: "domain1", role: "admin" };
-      const newUser: ActorDoc = { badges: [], domains: [mockDomain] };
+      const newUser: ActorDoc = {
+        badges: [],
+        domains: [mockDomain],
+        slackUser: "adsad",
+        slackTeam: "adsds",
+      };
       mockUsersCollection[userId] = newUser;
       thisUser = mockUsersCollection[userId];
     }

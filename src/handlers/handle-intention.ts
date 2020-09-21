@@ -5,7 +5,7 @@ import { handleReveal } from "./handle-reveal";
 import { handleHelp } from "./handle-help";
 import { CascadingData } from "src/types";
 
-export async function handleIntention(data: CascadingData) {
+export async function handleIntention(data: CascadingData): Promise<string> {
   const { intention } = data;
 
   switch (intention.action) {
@@ -33,7 +33,9 @@ export async function handleIntention(data: CascadingData) {
 
     default:
       throw new Error(
-        "Unknown invocation: " + intention.action + `\n\n${await handleHelp()}`
+        `Paladin server couldn't execute your request: ${
+          intention.action
+        }\n\n${await handleHelp()}`
       );
   }
 }

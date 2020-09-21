@@ -1,28 +1,54 @@
-import { CascadingData } from "../types";
-import { db, isValidUser } from "../database";
+import { CascadingData, BadgeDoc, ActorDoc } from "../types";
+import { findOrCreateUser } from "../database/user-facade";
 
 export async function handleGrant({
   intention: { userId, badge },
-}: CascadingData) {
-  const thisBadgeData = await db.findBadgeData(badge);
-
-  if (!isValidUser(userId)) {
-    throw new Error(`Invalid userId when granting to badge`);
-  }
-
-  if (!thisBadgeData) {
-    throw new Error(`Unknown badge being granted: ${badge}`);
-  }
-
-  const targetUser = await db.findOrCreateUser(userId);
-  if (targetUser.badges.includes(badge))
-    return `<@${userId}> already has ${badge}.`;
+  dbSingleton,
+  event: { team },
+}: CascadingData): Promise<string> {
+  let badgeDoc: BadgeDoc;
+  let userDoc: ActorDoc;
 
   try {
-    await db.grantBadgeToUser(userId, badge);
+    const getBadge = dbSingleton
+      .collection("badges")
+      .findOne({ slackTeam: team, emoji: badge });
+
+    const getUser = findOrCreateUser({
+      dbSingleton,
+      user: userId,
+      team,
+    });
+
+    [badgeDoc, userDoc] = await Promise.all([getBadge, getUser]);
+  } catch (e) {
+    console.error(e);
+    throw new Error(
+      `Paladin server failed to complete grant operation: ${e.message || e}`
+    );
+  }
+
+  if (!badgeDoc) {
+    throw new Error(`Paladin server cannot find badge: ${badge}`);
+  }
+
+  if (!userDoc) {
+    throw new Error(`Paladin server cannot find user: <@${userId}>`);
+  }
+
+  if (userDoc.badges.includes(badge)) {
+    return `<@${userId}> already has ${badge}.`;
+  }
+
+  try {
+    const filter = { _id: userDoc._id };
+    const update = { $set: { badges: [...userDoc.badges, badge] } };
+    await dbSingleton.collection("users").updateOne(filter, update);
     return `${badge} badge granted to <@${userId}>`;
   } catch (e) {
     console.error(e);
-    throw new Error(`Failed to grant Badge to <@${userId}>, please try again`);
+    throw new Error(
+      `Paladin server failed to complete grant operation: ${e.message || e}`
+    );
   }
 }
