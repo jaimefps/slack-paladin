@@ -3,7 +3,7 @@ require("dotenv").config();
 import { App } from "@slack/bolt";
 import { handleHelp } from "./handlers/handle-help";
 import { handleIntention } from "./handlers/handle-intention";
-import { getIntention, actorIsAllowed } from "./helpers";
+import { getIntention /* , actorIsAllowed */ } from "./helpers";
 import { SLACK_EVENTS, ACTION_TYPES } from "./constants";
 import { db } from "./database";
 
@@ -42,17 +42,17 @@ const bot = new App({
         );
 
       const actor = await db.findOrCreateUser(event.user);
-      const hasPermission = await actorIsAllowed({
-        intention,
-        context,
-        event,
-        actor,
-      });
+      // const hasPermission = await actorIsAllowed({
+      //   intention,
+      //   context,
+      //   event,
+      //   actor,
+      // });
 
-      if (!hasPermission)
-        throw new Error(
-          `<@${event.user}> does not have permission to do that.`
-        );
+      // if (!hasPermission)
+      //   throw new Error(
+      //     `<@${event.user}> does not have permission to do that.`
+      //   );
 
       const result = await handleIntention({
         intention,

@@ -1,10 +1,9 @@
 import { ACTION_TYPES } from "./constants";
 import { db } from "./database";
-import { CascadingData } from "./types";
+import { CascadingData, DomainRoles } from "./types";
 
-interface ActorDomain {
-  name: string;
-  role: string;
+export function getPresentTime() {
+  return new Date().toISOString();
 }
 
 export async function actorIsAllowed({ intention, actor }: CascadingData) {
@@ -23,7 +22,7 @@ export async function actorIsAllowed({ intention, actor }: CascadingData) {
       ({ domains: badgeDomains } = await db.findBadgeData(badgeOrDomain));
       return (
         actorDomains.filter(
-          (actDom: ActorDomain) =>
+          (actDom: DomainRoles) =>
             badgeDomains.includes(actDom.name) &&
             (actDom.role === "admin" || actDom.role === "paladin")
         ).length > 0
@@ -33,7 +32,7 @@ export async function actorIsAllowed({ intention, actor }: CascadingData) {
     case ACTION_TYPES.promote:
     case ACTION_TYPES.exile:
       return !!actorDomains.find(
-        (actDom: ActorDomain) => actDom.name === badgeOrDomain
+        (actDom: DomainRoles) => actDom.name === badgeOrDomain
       );
 
     default:
