@@ -1,54 +1,36 @@
 require("dotenv").config();
 
-import { App } from "@slack/bolt";
+import { App, ExpressReceiver } from "@slack/bolt";
 import { handleHelp } from "./handlers/handle-help";
 import { handleIntention } from "./handlers/handle-intention";
-import { getIntention /* , actorIsAllowed */ } from "./helpers";
+import { getIntention } from "./helpers";
 import { SLACK_EVENTS, ACTION_TYPES } from "./constants";
-import { createClient, getDBName } from "./database/connection";
+import { createDbSingleton } from "./database/connection";
 import { findOrCreateUser } from "./database/user-facade";
-// import { db } from "./database";
 
-const PORT = 4390 || process.env.PORT;
+(async function start() {
+  // environment:
+  const PORT = 4390 || process.env.PORT;
+  const signingSecret = process.env.SLACK_SIGNING_SECRET;
+  const token = process.env.SLACK_BOT_TOKEN;
 
-// root async/await:
-async function start() {
-  /**
-   * DB setup
-   */
-  const dbClient = await createClient();
-  const dbSingleton = dbClient.db(getDBName());
-  process.on("SIGINT", function () {
-    dbClient.close(function () {
-      console.log("🔌 MongoDB disconnected on app termination 🔌");
-      process.exit(0);
-    });
-  });
+  // singletons:
+  const dbSingleton = await createDbSingleton();
+  const restClient = new ExpressReceiver({ signingSecret });
+  const slackbot = new App({ token, receiver: restClient });
 
-  /**
-   * SlackBot setup
-   */
-  const bot = new App({
-    signingSecret: process.env.SLACK_SIGNING_SECRET,
-    token: process.env.SLACK_BOT_TOKEN,
-  });
-  await bot.start(PORT);
-  bot.event(SLACK_EVENTS.app_mention, async ({ context, event }) => {
-    const { team, user } = event;
-    console.log("context:", context);
+  // restClient.router.get("/test", (_, res) => res.send({ 1: "yay!" }));
+  // restClient.router.post("/test", (_, res) => res.send({ 1: "yay!" }));
+  // restClient.router.put("/test", (_, res) => res.send({ 1: "yay!" }));
+  // restClient.router.delete("/test", (_, res) => res.send({ 1: "yay!" }));
+
+  slackbot.event(SLACK_EVENTS.app_mention, async ({ context, event }) => {
     console.log("event:", event);
-
-    function reply({ text }: { text: string }) {
-      bot.client.chat.postMessage({
-        token: context.botToken,
-        channel: event.channel,
-        thread_ts: event.ts,
-        text,
-      });
-    }
+    console.log("context:", context);
 
     try {
       const intention = getIntention({ context, event });
+
       if (!ACTION_TYPES[intention.action]) {
         throw new Error(
           "Unknown invocation: " +
@@ -56,42 +38,64 @@ async function start() {
             `\n\n${await handleHelp()}`
         );
       }
-      const actor = await findOrCreateUser({ dbSingleton, team, user });
-      if (!actor)
+
+      const actor = await findOrCreateUser({
+        dbSingleton,
+        team: event.team,
+        user: event.user,
+      });
+
+      if (!actor) {
         throw new Error(
           `Paladin server unable to find or create <@${event.user}>.`
         );
-      // console.log("theactor:", actor);
+      }
+
       // const hasPermission = await actorIsAllowed({
       //   intention,
       //   context,
       //   event,
       //   actor,
       // });
-      // if (!hasPermission)
+
+      // if (!hasPermission) {
       //   throw new Error(
       //     `<@${event.user}> does not have permission to do that.`
       //   );
-      await reply({
-        text: await handleIntention({
-          actor,
-          context,
-          dbSingleton,
-          event,
-          intention,
-        }),
+      // }
+
+      const text = await handleIntention({
+        actor,
+        context,
+        dbSingleton,
+        event,
+        intention,
+      });
+
+      if (!text) {
+        throw new Error(`Paladin server unclear if action was completed.`);
+      }
+
+      await slackbot.client.chat.postMessage({
+        text,
+        channel: event.channel,
+        thread_ts: event.ts,
+        token: context.botToken,
       });
     } catch (e) {
       try {
-        const errMsg = `Error: ${e.message}`;
-        await reply({ text: errMsg });
+        await slackbot.client.chat.postMessage({
+          text: `Error: ${e.message}`,
+          channel: event.channel,
+          thread_ts: event.ts,
+          token: context.botToken,
+        });
       } catch (error) {
         console.error(error);
       }
     }
   });
 
-  console.log("⚡ Paladin app is running ⚡");
-}
-
-start();
+  await slackbot.start(PORT);
+  console.log(`⚡ Paladin app is running on PORT: ${PORT} ⚡`);
+})();

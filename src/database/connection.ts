@@ -1,4 +1,4 @@
-import { MongoClient } from "mongodb";
+import { Db, MongoClient } from "mongodb";
 
 export function getDBUrl() {
   switch (process.env.NODE_ENV) {
@@ -26,10 +26,22 @@ export function getDBName(): string {
   }
 }
 
-export async function createClient() {
-  const url = getDBUrl();
-  return MongoClient.connect(url, {
+export async function createDbSingleton(): Promise<Db> {
+  const dbUrl = getDBUrl();
+  const dbName = getDBName();
+  const client = await MongoClient.connect(dbUrl, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   });
+  // ensure we disconnect from Mongo
+  // whenever Node is shut down:
+  process.on("SIGINT", () => {
+    client.close(() => {
+      console.log("🔌 MongoDB disconnected on app termination 🔌");
+      process.exit(0);
+    });
+  });
+  // singleton connection to
+  // paladin database:
+  return client.db(dbName);
 }
