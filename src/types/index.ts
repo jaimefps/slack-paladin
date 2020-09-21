@@ -1,10 +1,11 @@
 import { Context as SlackContext, SlackEvent } from "@slack/bolt";
 import { Db } from "mongodb";
+import { ACTION_TYPES } from "../constants";
 
 export interface Intention {
-  action: string;
-  userId: string;
-  badge: string;
+  action: ACTION_TYPES;
+  targetId?: string;
+  badge?: string;
 }
 
 /**

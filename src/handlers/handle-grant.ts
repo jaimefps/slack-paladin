@@ -2,7 +2,7 @@ import { CascadingData, BadgeDoc, ActorDoc } from "../types";
 import { findOrCreateUser } from "../database/user-facade";
 
 export async function handleGrant({
-  intention: { userId, badge },
+  intention: { targetId, badge },
   dbSingleton,
   event: { team },
 }: CascadingData): Promise<string> {
@@ -16,7 +16,7 @@ export async function handleGrant({
 
     const getUser = findOrCreateUser({
       dbSingleton,
-      user: userId,
+      user: targetId,
       team,
     });
 
@@ -33,18 +33,18 @@ export async function handleGrant({
   }
 
   if (!userDoc) {
-    throw new Error(`Paladin server cannot find user: <@${userId}>`);
+    throw new Error(`Paladin server cannot find user: <@${targetId}>`);
   }
 
   if (userDoc.badges.includes(badge)) {
-    return `<@${userId}> already has ${badge}.`;
+    return `<@${targetId}> already has ${badge}.`;
   }
 
   try {
     const filter = { _id: userDoc._id };
     const update = { $set: { badges: [...userDoc.badges, badge] } };
     await dbSingleton.collection("users").updateOne(filter, update);
-    return `${badge} badge granted to <@${userId}>`;
+    return `${badge} badge granted to <@${targetId}>`;
   } catch (e) {
     console.error(e);
     throw new Error(

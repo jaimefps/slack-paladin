@@ -1,7 +1,10 @@
 import { Db } from "mongodb";
 import { ActorDoc } from "src/types";
 
-export function makeUser(slackTeamId: string, slackUserId: string): ActorDoc {
+export function makeUserDoc(
+  slackTeamId: string,
+  slackUserId: string
+): ActorDoc {
   return {
     badges: [],
     domains: [],
@@ -23,7 +26,7 @@ export async function findOrCreateUser({
     .collection("users")
     .findOneAndUpdate(
       { slackUser: user },
-      { $setOnInsert: makeUser(team, user) },
+      { $setOnInsert: makeUserDoc(team, user) },
       { returnOriginal: false, upsert: true }
     );
   return result.value;
