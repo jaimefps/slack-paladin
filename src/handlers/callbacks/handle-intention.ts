@@ -45,10 +45,13 @@ export async function handleIntention(data: CascadingData): Promise<string> {
   switch (intention.action) {
     case ACTION_TYPES.help:
       return await handleHelp();
+
     case ACTION_TYPES.grant:
       return await handleGrant(data, intention);
+
     case ACTION_TYPES.remove:
       return await handleRemove(data, intention);
+
     case ACTION_TYPES.reveal:
       return await handleReveal(data, intention);
 

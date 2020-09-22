@@ -4,6 +4,7 @@ import {
   GrantIntention,
   Intention,
   RemoveIntention,
+  RevealIntention,
 } from "../../types";
 
 /**
@@ -55,6 +56,14 @@ export function createRemoveIntention(data: CascadingData): RemoveIntention {
   };
 }
 
+export function createRevealIntention(data: CascadingData): RevealIntention {
+  const [, , dirtyTargetId] = getTextParts(data);
+  return {
+    action: ACTION_TYPES.reveal,
+    targetId: extractId(dirtyTargetId),
+  };
+}
+
 /**
  * root
  *
@@ -65,10 +74,16 @@ export function createIntention(data: CascadingData): Intention {
   switch (action) {
     case ACTION_TYPES.help:
       return createHelpIntention();
+
     case ACTION_TYPES.grant:
       return createGrantIntention(data);
+
     case ACTION_TYPES.remove:
       return createRemoveIntention(data);
+
+    case ACTION_TYPES.reveal:
+      return createRevealIntention(data);
+
     default:
       return createHelpIntention();
   }
