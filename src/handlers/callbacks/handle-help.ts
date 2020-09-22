@@ -1,37 +1,42 @@
+import { ACTION_TYPES } from "../../constants";
+
 export async function handleHelp() {
   return `These are the commands I support:
 \`\`\`
-@paladin help
+@paladin ${ACTION_TYPES.help}
   => shows list commands
 
-@paladin whoami
+@paladin ${ACTION_TYPES.whoami}
   => shows own permissions and badges
   
-@paladin bard <user>
+@paladin ${ACTION_TYPES.reveal} <user>
   => shows a user's permissions and badges
 
-@paladin reveal badges
+@paladin ${ACTION_TYPES.list} badges
   => shows list available badges
 
-@paladin reveal domains
+@paladin ${ACTION_TYPES.list} domains
   => shows list domains and their admin/paladins
 
-@paladin bestow <user> <badge>
+@paladin ${ACTION_TYPES.grant} <user> <badge>
   => gives badge to the user
 
-@paladin deprive <user> <badge>
+@paladin ${ACTION_TYPES.remove} <user> <badge>
   => removes badge from the user
 
-@paladin promote <user> <domain>
+@paladin ${ACTION_TYPES.promote} <user> <domain>
   => promotes user to next level up in selected domain
 
-@paladin demote <user> <domain>
+@paladin ${ACTION_TYPES.demote} <user> <domain>
   => converts user to "villager" in domain
 
-@paladin forge <badge> <domain>
+@paladin ${ACTION_TYPES.forge} <badge> <domain>
   => converts user to "villager" in domain
 
-@paladin opensesame
+@paladin ${ACTION_TYPES.unearth} <domain>
+  => creates a 
+
+@paladin ${ACTION_TYPES.access}
   => respond with password for UI dashboard
 \`\`\`
   `;

@@ -1,8 +1,8 @@
 require("dotenv").config();
 
 import { App, ExpressReceiver } from "@slack/bolt";
-import { handleIntention } from "./handlers/callbacks/handle-intention";
-import { createDbSingleton } from "./database/connection";
+import { handleIntention } from "./handlers/callbacks";
+import { createDbSingleton } from "./database";
 
 (async function start() {
   // environment:
@@ -44,16 +44,16 @@ import { createDbSingleton } from "./database/connection";
         await slackbot.client.chat.postMessage({
           text,
           channel: event.channel,
-          // thread_ts: event.ts,
           token: context.botToken,
+          // thread_ts: event.ts,
         });
       } catch (err1) {
         try {
           await slackbot.client.chat.postMessage({
             text: `Error: ${err1.message}`,
             channel: event.channel,
-            // thread_ts: event.ts,
             token: context.botToken,
+            // thread_ts: event.ts,
           });
         } catch (err2) {
           console.error(err2);

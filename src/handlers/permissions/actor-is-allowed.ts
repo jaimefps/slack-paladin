@@ -1,38 +1,37 @@
-import { BadgeDoc, CascadingData, DomainRole, Intention } from "../../types";
-import { ACTION_TYPES } from "../../constants";
-import { areSameId } from "src/database/utils";
+import { CascadingData, Intention } from "../../types";
+// import { ACTION_TYPES } from "../../constants";
+// import { areSameId } from "../../database/utils";
 
-export async function actorIsAllowed(
-  { actor, dbSingleton }: CascadingData,
-  intention: Intention
-) {
-  switch (intention.action) {
-    case ACTION_TYPES.help:
-      return true;
+export async function actorIsAllowed(_: CascadingData, __: Intention) {
+  return true;
 
-    // a badge can be in multiple domains.
-    // must have PALADIN in one of the badge's domains.
-    case ACTION_TYPES.grant:
-    case ACTION_TYPES.remove:
-      const { domains: badgeDomains }: BadgeDoc = await dbSingleton
-        .collection("badges")
-        .findOne({ emoji: intention.badge });
-      return (
-        actor.domains.filter(
-          (actDom: DomainRole) =>
-            badgeDomains.find((id) => areSameId(actDom.id, id)) &&
-            (actDom.role === "admin" || actDom.role === "paladin")
-        ).length > 0
-      );
+  // switch (intention.action) {
+  //   case ACTION_TYPES.help:
+  //     return true;
 
-    // must be ADMIN in that domain.
-    // case ACTION_TYPES.promote:
-    // case ACTION_TYPES.demote:
-    //   return !!actorDomains.find(
-    //     (actDom: DomainRoles) => actDom.name === badgeOrDomain
-    //   );
+  //   // a badge can be in multiple domains.
+  //   // must have PALADIN in one of the badge's domains.
+  //   // case ACTION_TYPES.grant:
+  //   // case ACTION_TYPES.remove:
+  //   //   const { domain }: BadgeDoc = await dbSingleton
+  //   //     .collection("badges")
+  //   //     .findOne({ emoji: intention.badge });
+  //   //   return (
+  //   //     actor.domains.filter(
+  //   //       (actDom: DomainRole) =>
+  //   //         areSameId(domain, id) &&
+  //   //         (actDom.role === "admin" || actDom.role === "paladin")
+  //   //     ).length > 0
+  //   //   );
 
-    default:
-      throw new Error("Paladin failed to review permissions");
-  }
+  //   // must be ADMIN in that domain.
+  //   // case ACTION_TYPES.promote:
+  //   // case ACTION_TYPES.demote:
+  //   //   return !!actorDomains.find(
+  //   //     (actDom: DomainRoles) => actDom.name === badgeOrDomain
+  //   //   );
+
+  //   default:
+  //     throw new Error("Paladin failed to review permissions");
+  // }
 }

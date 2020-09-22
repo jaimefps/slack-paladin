@@ -1,20 +1,7 @@
 import { Db, ObjectId } from "mongodb";
-import { UserDoc } from "src/types";
+import { DB_COLLECTIONS } from "../constants";
+import { UserDoc } from "../types";
 import { areSameId } from "./utils";
-import { isValidUser } from "../helpers/index";
-
-export function userHasBadge(userDoc: UserDoc, badgeId: ObjectId): boolean {
-  return !!userDoc.badges.find((id) => areSameId(badgeId, id));
-}
-
-export function makeUserDoc(slackTeamId: string, slackUserId: string): UserDoc {
-  return {
-    badges: [],
-    domains: [],
-    slackTeam: slackTeamId,
-    slackUser: slackUserId,
-  };
-}
 
 export async function findOrCreateUser({
   dbSingleton,
@@ -25,15 +12,27 @@ export async function findOrCreateUser({
   user: string;
   team: string;
 }): Promise<UserDoc> {
-  if (!isValidUser(user)) {
-    throw new Error(`Paladin cannot find or create invalid user ${user}`);
+  const userDoc: UserDoc = {
+    badges: [],
+    domains: [],
+    slackTeam: team,
+    slackUser: user,
+  };
+
+  try {
+    const result = await dbSingleton
+      .collection(DB_COLLECTIONS.users)
+      .findOneAndUpdate(
+        { slackUser: user },
+        { $setOnInsert: userDoc },
+        { returnOriginal: false, upsert: true }
+      );
+    return result.value;
+  } catch (e) {
+    throw new Error("Paladin failed to register user");
   }
-  const result = await dbSingleton
-    .collection("users")
-    .findOneAndUpdate(
-      { slackUser: user },
-      { $setOnInsert: makeUserDoc(team, user) },
-      { returnOriginal: false, upsert: true }
-    );
-  return result.value;
+}
+
+export function userHasBadge(userDoc: UserDoc, badgeId: ObjectId): boolean {
+  return !!userDoc.badges.find((id) => areSameId(badgeId, id));
 }

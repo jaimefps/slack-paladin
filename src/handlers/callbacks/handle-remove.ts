@@ -1,7 +1,7 @@
 import { findOrCreateUser, userHasBadge } from "../../database/user-facade";
 import { BadgeDoc, CascadingData, RemoveIntention, UserDoc } from "../../types";
 import { areSameId } from "../../database/utils";
-import { fatal } from "../../helpers";
+import { DB_COLLECTIONS } from "../../constants";
 
 export async function handleRemove(
   { dbSingleton, event: { team } }: CascadingData,
@@ -12,7 +12,7 @@ export async function handleRemove(
 
   try {
     const getBadge = dbSingleton
-      .collection("badges")
+      .collection(DB_COLLECTIONS.badges)
       .findOne({ slackTeam: team, emoji: badge });
 
     const getUser = findOrCreateUser({
@@ -23,7 +23,10 @@ export async function handleRemove(
 
     [badgeDoc, userDoc] = await Promise.all([getBadge, getUser]);
   } catch (e) {
-    fatal(e);
+    console.error(e);
+    throw new Error(
+      `Paladin failed to find user or badge info for: <@${targetId}>`
+    );
   }
 
   if (!badgeDoc) {
@@ -34,9 +37,7 @@ export async function handleRemove(
     throw new Error(`Paladin server cannot find user: <@${targetId}>`);
   }
 
-  const hasBadge = userHasBadge(userDoc, badgeDoc._id);
-
-  if (!hasBadge) {
+  if (!userHasBadge(userDoc, badgeDoc._id)) {
     return `<@${targetId}> doesn't even have badge ${badge}`;
   }
 
@@ -46,9 +47,12 @@ export async function handleRemove(
     );
     const filter = { _id: userDoc._id };
     const update = { $set: { badges: newBadges } };
-    await dbSingleton.collection("users").updateOne(filter, update);
+    await dbSingleton
+      .collection(DB_COLLECTIONS.users)
+      .updateOne(filter, update);
     return `${badge} badge removed from <@${targetId}>`;
   } catch (e) {
-    fatal(e);
+    console.error(e);
+    throw new Error(`Paladin failed to deprive user: <@${targetId}>`);
   }
 }

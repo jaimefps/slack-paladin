@@ -9,14 +9,14 @@ import { ACTION_TYPES } from "../constants";
 export interface TeamDoc {
   _id?: ObjectId;
   slackTeam: string;
-  // track spending etc?
+  // etc
 }
 
 export interface DomainDoc {
   _id?: ObjectId;
   name: string;
-  description: string;
   slackTeam: string;
+  description?: string;
 }
 
 export interface BadgeDoc {
@@ -24,13 +24,15 @@ export interface BadgeDoc {
   name: string;
   emoji: string;
   description: string;
-  domains: ObjectId[];
+  domain: ObjectId;
   slackTeam: string;
 }
 
+export type UserRole = "admin" | "paladin";
+
 export interface DomainRole {
   id: ObjectId;
-  role: string;
+  role: UserRole;
 }
 
 export interface UserDoc {
@@ -60,6 +62,11 @@ export interface HelpIntention {
   action: ACTION_TYPES.help;
 }
 
+export interface UnearthIntention {
+  action: ACTION_TYPES.unearth;
+  domain: string;
+}
+
 export interface BadgeIntention {
   targetId: string;
   badge: string;
@@ -73,13 +80,20 @@ export interface RemoveIntention extends BadgeIntention {
   action: ACTION_TYPES.remove;
 }
 
+// bard action
 export interface RevealIntention {
   action: ACTION_TYPES.reveal;
   targetId: string;
+}
+
+export interface WhoamiIntention {
+  action: ACTION_TYPES.whoami;
 }
 
 export type Intention =
   | HelpIntention
   | GrantIntention
   | RemoveIntention
-  | RevealIntention;
+  | RevealIntention
+  | UnearthIntention
+  | WhoamiIntention;

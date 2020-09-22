@@ -1,4 +1,4 @@
-import { Db, MongoClient } from "mongodb";
+import { MongoClient } from "mongodb";
 
 export function getDBUrl() {
   switch (process.env.NODE_ENV) {
@@ -9,7 +9,7 @@ export function getDBUrl() {
   }
 }
 
-export function getDBName(): string {
+export function getDBName() {
   switch (process.env.NODE_ENV) {
     case "development":
       return "paladin-dev";
@@ -18,7 +18,7 @@ export function getDBName(): string {
   }
 }
 
-export async function createDbSingleton(): Promise<Db> {
+export async function createDbSingleton() {
   const client = await MongoClient.connect(getDBUrl(), {
     useNewUrlParser: true,
     useUnifiedTopology: true,
