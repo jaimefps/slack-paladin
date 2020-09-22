@@ -6,7 +6,7 @@ import { createDbSingleton } from "./database/connection";
 
 (async function start() {
   // environment:
-  const PORT = 4390 || process.env.PORT;
+  const PORT = process.env.PORT || 4390;
   const token = process.env.SLACK_BOT_TOKEN;
   const signingSecret = process.env.SLACK_SIGNING_SECRET;
 
@@ -63,5 +63,5 @@ import { createDbSingleton } from "./database/connection";
   );
 
   await slackbot.start(PORT);
-  console.log(`⚡ Paladin app is running on PORT: ${PORT} ⚡`);
+  console.log(`⚡ Paladin app is running on http://localhost:${PORT} ⚡`);
 })();
