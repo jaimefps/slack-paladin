@@ -1,67 +1,85 @@
 import { Context as SlackContext, SlackEvent } from "@slack/bolt";
-import { Db } from "mongodb";
+import { Db, ObjectId } from "mongodb";
 import { ACTION_TYPES } from "../constants";
 
-export interface Intention {
-  action: ACTION_TYPES;
-  targetId?: string;
-  badge?: string;
-}
-
 /**
- * DATABASE Doc interfaces
+ * Database Interfaces
+ *
  */
-export interface DomainRoles {
-  name: string;
-  role: string;
-}
-
 export interface TeamDoc {
-  _id: string;
+  _id?: ObjectId;
   slackTeam: string;
   // track spending etc?
 }
 
 export interface DomainDoc {
-  _id: string;
+  _id?: ObjectId;
   name: string;
+  description: string;
   slackTeam: string;
 }
 
 export interface BadgeDoc {
-  _id?: string;
-  name?: string;
-  emoji?: string;
-  description?: string;
-  points?: Number;
-  domains: string[]; // DomainDoc.id
-  slackTeam?: string;
+  _id?: ObjectId;
+  name: string;
+  emoji: string;
+  description: string;
+  domains: ObjectId[];
+  slackTeam: string;
 }
 
-export interface ActorDoc {
-  _id?: string;
-  badges: string[];
-  domains: DomainRoles[];
-  slackTeam?: string;
+export interface DomainRole {
+  id: ObjectId;
+  role: string;
+}
+
+export interface UserDoc {
+  _id?: ObjectId;
+  badges: ObjectId[];
+  domains: DomainRole[];
+  slackTeam: string;
   slackUser: string;
 }
 
 /**
- * TODO delete below interfaces
+ * Global Data Interface
+ *
  */
 export interface CascadingData {
-  actor?: ActorDoc;
+  actor: UserDoc;
   context: SlackContext;
-  dbSingleton?: Db;
+  dbSingleton: Db;
   event: SlackEvent;
-  intention?: Intention;
 }
-export interface DomainCollection {
-  [k: string]: string;
+
+/**
+ * Intention Interfaces
+ *
+ */
+export interface HelpIntention {
+  action: ACTION_TYPES.help;
 }
-export interface BadgeCollection {
-  [k: string]: BadgeDoc;
+
+export interface BadgeIntention {
+  targetId: string;
+  badge: string;
 }
-export interface UserCollection {
-  [k: string]: ActorDoc;
+
+export interface GrantIntention extends BadgeIntention {
+  action: ACTION_TYPES.grant;
 }
+
+export interface RemoveIntention extends BadgeIntention {
+  action: ACTION_TYPES.remove;
+}
+
+export interface RevealIntention {
+  action: ACTION_TYPES.reveal;
+  targetId: string;
+}
+
+export type Intention =
+  | HelpIntention
+  | GrantIntention
+  | RemoveIntention
+  | RevealIntention;

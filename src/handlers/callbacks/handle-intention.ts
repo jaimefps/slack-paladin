@@ -2,20 +2,20 @@ import { handleGrant } from "./handle-grant";
 import { handleRemove } from "./handle-remove";
 import { handleReveal } from "./handle-reveal";
 import { handleHelp } from "./handle-help";
-import { CascadingData } from "../types";
-import { ACTION_TYPES } from "../constants";
-import { findOrCreateUser } from "../database/user-facade";
-import { getIntention } from "./helpers";
+import { CascadingData } from "../../types";
+import { ACTION_TYPES } from "../../constants";
+import { findOrCreateUser } from "../../database/user-facade";
+import { createIntention } from "../intentions/create-intention";
 
 export async function handleIntention(data: CascadingData): Promise<string> {
   const { context, event, dbSingleton } = data;
-  const intention = getIntention({ context, event });
 
-  if (!ACTION_TYPES[intention.action]) {
-    throw new Error(
-      "Unknown invocation: " + intention.action + `\n\n${await handleHelp()}`
-    );
-  }
+  const intention = createIntention({
+    context,
+    event,
+    dbSingleton: null,
+    actor: null,
+  });
 
   const actor = await findOrCreateUser({
     dbSingleton,
@@ -46,11 +46,11 @@ export async function handleIntention(data: CascadingData): Promise<string> {
     case ACTION_TYPES.help:
       return await handleHelp();
     case ACTION_TYPES.grant:
-      return await handleGrant(data);
+      return await handleGrant(data, intention);
     case ACTION_TYPES.remove:
-      return await handleRemove(data);
+      return await handleRemove(data, intention);
     case ACTION_TYPES.reveal:
-      return await handleReveal(data);
+      return await handleReveal(data, intention);
 
     /**
      * TODO handle:
@@ -64,12 +64,5 @@ export async function handleIntention(data: CascadingData): Promise<string> {
      *  tomato,
      *  clean,
      */
-
-    default:
-      throw new Error(
-        `Paladin server couldn't execute your request: ${
-          intention.action
-        }\n\n${await handleHelp()}`
-      );
   }
 }

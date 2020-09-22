@@ -1,13 +1,13 @@
-import { CascadingData, BadgeDoc, ActorDoc } from "../types";
-import { findOrCreateUser } from "../database/user-facade";
+import { CascadingData, BadgeDoc, UserDoc, GrantIntention } from "../../types";
+import { findOrCreateUser, userHasBadge } from "../../database/user-facade";
+import { fatal } from "../../helpers";
 
-export async function handleGrant({
-  intention: { targetId, badge },
-  dbSingleton,
-  event: { team },
-}: CascadingData): Promise<string> {
+export async function handleGrant(
+  { dbSingleton, event: { team } }: CascadingData,
+  { targetId, badge }: GrantIntention
+): Promise<string> {
   let badgeDoc: BadgeDoc;
-  let userDoc: ActorDoc;
+  let userDoc: UserDoc;
 
   try {
     const getBadge = dbSingleton
@@ -22,10 +22,7 @@ export async function handleGrant({
 
     [badgeDoc, userDoc] = await Promise.all([getBadge, getUser]);
   } catch (e) {
-    console.error(e);
-    throw new Error(
-      `Paladin server failed to complete grant operation: ${e.message || e}`
-    );
+    fatal(e);
   }
 
   if (!badgeDoc) {
@@ -36,19 +33,18 @@ export async function handleGrant({
     throw new Error(`Paladin server cannot find user: <@${targetId}>`);
   }
 
-  if (userDoc.badges.includes(badge)) {
+  const hasBadge = userHasBadge(userDoc, badgeDoc._id);
+
+  if (hasBadge) {
     return `<@${targetId}> already has ${badge}.`;
   }
 
   try {
     const filter = { _id: userDoc._id };
-    const update = { $set: { badges: [...userDoc.badges, badge] } };
+    const update = { $set: { badges: [...userDoc.badges, badgeDoc._id] } };
     await dbSingleton.collection("users").updateOne(filter, update);
     return `${badge} badge granted to <@${targetId}>`;
   } catch (e) {
-    console.error(e);
-    throw new Error(
-      `Paladin server failed to complete grant operation: ${e.message || e}`
-    );
+    fatal(e);
   }
 }

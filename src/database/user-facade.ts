@@ -1,10 +1,13 @@
-import { Db } from "mongodb";
-import { ActorDoc } from "src/types";
+import { Db, ObjectId } from "mongodb";
+import { UserDoc } from "src/types";
+import { areSameId } from "./utils";
+import { isValidUser } from "../helpers/index";
 
-export function makeUserDoc(
-  slackTeamId: string,
-  slackUserId: string
-): ActorDoc {
+export function userHasBadge(userDoc: UserDoc, badgeId: ObjectId): boolean {
+  return !!userDoc.badges.find((id) => areSameId(badgeId, id));
+}
+
+export function makeUserDoc(slackTeamId: string, slackUserId: string): UserDoc {
   return {
     badges: [],
     domains: [],
@@ -21,7 +24,10 @@ export async function findOrCreateUser({
   dbSingleton: Db;
   user: string;
   team: string;
-}): Promise<ActorDoc> {
+}): Promise<UserDoc> {
+  if (!isValidUser(user)) {
+    throw new Error(`Paladin cannot find or create invalid user ${user}`);
+  }
   const result = await dbSingleton
     .collection("users")
     .findOneAndUpdate(

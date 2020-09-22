@@ -1,7 +1,7 @@
 require("dotenv").config();
 
 import { App, ExpressReceiver } from "@slack/bolt";
-import { handleIntention } from "./handlers/handle-intention";
+import { handleIntention } from "./handlers/callbacks/handle-intention";
 import { createDbSingleton } from "./database/connection";
 
 (async function start() {
@@ -29,6 +29,7 @@ import { createDbSingleton } from "./database/connection";
 
       try {
         const text = await handleIntention({
+          actor: null,
           context,
           dbSingleton,
           event,
@@ -43,7 +44,7 @@ import { createDbSingleton } from "./database/connection";
         await slackbot.client.chat.postMessage({
           text,
           channel: event.channel,
-          thread_ts: event.ts,
+          // thread_ts: event.ts,
           token: context.botToken,
         });
       } catch (err1) {
@@ -51,7 +52,7 @@ import { createDbSingleton } from "./database/connection";
           await slackbot.client.chat.postMessage({
             text: `Error: ${err1.message}`,
             channel: event.channel,
-            thread_ts: event.ts,
+            // thread_ts: event.ts,
             token: context.botToken,
           });
         } catch (err2) {
