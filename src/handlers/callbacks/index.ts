@@ -9,6 +9,7 @@ import { createIntention } from "../intentions";
 import { actorIsAllowed } from "../permissions";
 import { handleUnearth } from "./handle-unearth";
 import { handleWhoami } from "./handle-whoami";
+import { handleList } from "./handle-list";
 
 /**
  * root
@@ -30,9 +31,7 @@ export async function handleIntention(data: CascadingData): Promise<string> {
   });
 
   if (!actor) {
-    throw new Error(
-      `Paladin server unable to find or register <@${event.user}>.`
-    );
+    throw new Error(`Paladin failed to find or register <@${event.user}>.`);
   }
 
   const intention = createIntention({
@@ -48,7 +47,9 @@ export async function handleIntention(data: CascadingData): Promise<string> {
   );
 
   if (!hasPermission) {
-    throw new Error(`<@${event.user}> does not have permission to do that.`);
+    throw new Error(
+      `<@${actor.slackUser}> does not have permission to do that.`
+    );
   }
 
   switch (intention.action) {
@@ -71,13 +72,15 @@ export async function handleIntention(data: CascadingData): Promise<string> {
     case ACTION_TYPES.whoami:
       return await handleWhoami(data);
 
+    // reveal badges|domains:
+    case ACTION_TYPES.list:
+      return await handleList(data, intention);
+
     /**
      * TODO handle:
      *
      *  promote
      *  demote
-     *  reveal badges
-     *  reveal domains
      *  forge
      *
      *  tomato

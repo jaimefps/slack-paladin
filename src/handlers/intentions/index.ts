@@ -3,10 +3,12 @@ import {
   CascadingData,
   GrantIntention,
   Intention,
+  ListIntention,
   RemoveIntention,
   RevealIntention,
   UnearthIntention,
   WhoamiIntention,
+  Listings,
 } from "../../types";
 
 /**
@@ -96,6 +98,20 @@ export function makeWhoami(): WhoamiIntention {
   };
 }
 
+export function makeList(data: CascadingData): ListIntention {
+  const [, , resource] = getTextParts(data);
+  const resourceOpts = Object.values(Listings);
+  if (!resourceOpts.includes(resource as any)) {
+    throw new Error(
+      `Paladin only supports revealing: ${resourceOpts.join(", ")}`
+    );
+  }
+  return {
+    action: ACTION_TYPES.list,
+    resource: resource as Listings,
+  };
+}
+
 /**
  * root
  *
@@ -122,6 +138,10 @@ export function createIntention(data: CascadingData): Intention {
 
     case ACTION_TYPES.whoami:
       return makeWhoami();
+
+    // reveal badges|domains
+    case ACTION_TYPES.list:
+      return makeList(data);
 
     default:
       return {

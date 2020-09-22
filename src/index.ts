@@ -37,7 +37,7 @@ import { createDbSingleton } from "./database";
 
         if (!text) {
           throw new Error(
-            `Paladin server unsure if action was completed. Please try again or reach out to support.`
+            `Paladin unsure if action was completed. Please try again or reach out to support.`
           );
         }
 

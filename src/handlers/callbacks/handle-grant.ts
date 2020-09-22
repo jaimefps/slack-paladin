@@ -29,11 +29,11 @@ export async function handleGrant(
   }
 
   if (!badgeDoc) {
-    throw new Error(`Paladin server doesn't have a badge of: ${badge}`);
+    throw new Error(`Paladin doesn't have a badge of: ${badge}`);
   }
 
   if (!userDoc) {
-    throw new Error(`Paladin server cannot find user: <@${targetId}>`);
+    throw new Error(`Paladin cannot find user: <@${targetId}>`);
   }
 
   if (userHasBadge(userDoc, badgeDoc._id)) {

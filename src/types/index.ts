@@ -90,9 +90,21 @@ export interface WhoamiIntention {
   action: ACTION_TYPES.whoami;
 }
 
+export enum Listings {
+  badges = "badges",
+  domains = "domains",
+}
+
+// reveal badges|domains
+export interface ListIntention {
+  action: ACTION_TYPES.list;
+  resource: Listings;
+}
+
 export type Intention =
-  | HelpIntention
   | GrantIntention
+  | HelpIntention
+  | ListIntention
   | RemoveIntention
   | RevealIntention
   | UnearthIntention
