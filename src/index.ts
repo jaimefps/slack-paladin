@@ -29,7 +29,6 @@ import { createDbSingleton } from "./database";
 
       try {
         const text = await handleIntention({
-          actor: null,
           context,
           dbSingleton,
           event,

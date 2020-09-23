@@ -3,6 +3,17 @@ import { Db, ObjectId } from "mongodb";
 import { ACTION_TYPES } from "../constants";
 
 /**
+ * Global Data Interface
+ *
+ */
+export interface CascadingData {
+  actor: UserDoc;
+  context: SlackContext;
+  dbSingleton: Db;
+  event: SlackEvent;
+}
+
+/**
  * Database Interfaces
  *
  */
@@ -41,17 +52,6 @@ export interface UserDoc {
   domains: DomainRole[];
   slackTeam: string;
   slackUser: string;
-}
-
-/**
- * Global Data Interface
- *
- */
-export interface CascadingData {
-  actor: UserDoc;
-  context: SlackContext;
-  dbSingleton: Db;
-  event: SlackEvent;
 }
 
 /**
@@ -101,6 +101,18 @@ export interface ListIntention {
   resource: Listings;
 }
 
+export interface PromoteIntention {
+  action: ACTION_TYPES.promote;
+  targetId: string;
+  domain: string;
+}
+
+export interface DemoteIntention {
+  action: ACTION_TYPES.demote;
+  targetId: string;
+  domain: string;
+}
+
 export type Intention =
   | GrantIntention
   | HelpIntention
@@ -108,4 +120,6 @@ export type Intention =
   | RemoveIntention
   | RevealIntention
   | UnearthIntention
-  | WhoamiIntention;
+  | WhoamiIntention
+  | PromoteIntention
+  | DemoteIntention;

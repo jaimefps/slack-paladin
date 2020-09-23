@@ -35,9 +35,9 @@ export async function handleHelp() {
 
 @paladin ${ACTION_TYPES.unearth} <domain>
   => creates a 
-
-@paladin ${ACTION_TYPES.access}
-  => respond with password for UI dashboard
 \`\`\`
   `;
 }
+
+//@paladin ${ACTION_TYPES.access}
+//  => respond with password for UI dashboard

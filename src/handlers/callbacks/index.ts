@@ -1,21 +1,29 @@
+import { Db } from "mongodb";
+import { Context as SlackContext, SlackEvent } from "@slack/bolt";
+import { ACTION_TYPES } from "../../constants";
+import { actorIsAllowed } from "../permissions";
+import { createIntention } from "../intentions";
+import { findOrCreateUser } from "../../database/user-facade";
 import { handleGrant } from "./handle-grant";
+import { handleHelp } from "./handle-help";
+import { handleList } from "./handle-list";
+import { handlePromote } from "./handle-promote";
 import { handleRemove } from "./handle-remove";
 import { handleReveal } from "./handle-reveal";
-import { handleHelp } from "./handle-help";
-import { CascadingData } from "../../types";
-import { ACTION_TYPES } from "../../constants";
-import { findOrCreateUser } from "../../database/user-facade";
-import { createIntention } from "../intentions";
-import { actorIsAllowed } from "../permissions";
 import { handleUnearth } from "./handle-unearth";
 import { handleWhoami } from "./handle-whoami";
-import { handleList } from "./handle-list";
+import { CascadingData } from "src/types";
+import { handleDemote } from "./handle-demote";
 
 /**
  * root
  *
  */
-export async function handleIntention(data: CascadingData): Promise<string> {
+export async function handleIntention(data: {
+  context: SlackContext;
+  event: SlackEvent;
+  dbSingleton: Db;
+}): Promise<string> {
   const { context, event, dbSingleton } = data;
 
   if (!event.team) {
@@ -35,14 +43,13 @@ export async function handleIntention(data: CascadingData): Promise<string> {
   }
 
   const intention = createIntention({
-    actor: null,
+    actor,
     context,
-    dbSingleton: null,
     event,
   });
 
   const hasPermission = await actorIsAllowed(
-    { actor, context, dbSingleton: null, event },
+    { actor, context, dbSingleton, event },
     intention
   );
 
@@ -52,35 +59,41 @@ export async function handleIntention(data: CascadingData): Promise<string> {
     );
   }
 
+  const cascadingData: CascadingData = { ...data, actor };
+
   switch (intention.action) {
     case ACTION_TYPES.help:
       return await handleHelp();
 
-    case ACTION_TYPES.grant:
-      return await handleGrant(data, intention);
-
-    case ACTION_TYPES.remove:
-      return await handleRemove(data, intention);
+    case ACTION_TYPES.whoami:
+      return await handleWhoami(cascadingData);
 
     // bard action
     case ACTION_TYPES.reveal:
-      return await handleReveal(data, intention);
-
-    case ACTION_TYPES.unearth:
-      return await handleUnearth(data, intention);
-
-    case ACTION_TYPES.whoami:
-      return await handleWhoami(data);
+      return await handleReveal(cascadingData, intention);
 
     // reveal badges|domains:
     case ACTION_TYPES.list:
-      return await handleList(data, intention);
+      return await handleList(cascadingData, intention);
+
+    case ACTION_TYPES.grant:
+      return await handleGrant(cascadingData, intention);
+
+    case ACTION_TYPES.remove:
+      return await handleRemove(cascadingData, intention);
+
+    case ACTION_TYPES.unearth:
+      return await handleUnearth(cascadingData, intention);
+
+    case ACTION_TYPES.promote:
+      return await handlePromote(cascadingData, intention);
+
+    case ACTION_TYPES.demote:
+      return await handleDemote(cascadingData, intention);
 
     /**
      * TODO handle:
      *
-     *  promote
-     *  demote
      *  forge
      *
      *  tomato

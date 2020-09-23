@@ -1,6 +1,6 @@
+import { Context as SlackContext, SlackEvent } from "@slack/bolt";
 import { ACTION_TYPES } from "../../constants";
 import {
-  CascadingData,
   GrantIntention,
   Intention,
   ListIntention,
@@ -9,7 +9,16 @@ import {
   UnearthIntention,
   WhoamiIntention,
   Listings,
+  PromoteIntention,
+  UserDoc,
+  DemoteIntention,
 } from "../../types";
+
+interface IntentionRawData {
+  actor: UserDoc;
+  context: SlackContext;
+  event: SlackEvent;
+}
 
 /**
  * helpers
@@ -28,14 +37,14 @@ export function extractId(dirtyId: string): string {
   return userId;
 }
 
-export function getTextParts({ event: { text } }: CascadingData): string[] {
+export function getTextParts({ event: { text } }: IntentionRawData): string[] {
   return text
     .split(" ")
     .map((chunk: string) => chunk.trim())
     .filter((chunk: string) => !!chunk);
 }
 
-export function getTextAction(data: CascadingData): ACTION_TYPES {
+export function getTextAction(data: IntentionRawData): ACTION_TYPES {
   // improve type checking in this code
   const candidateAction = getTextParts(data)[1] as any;
   if (
@@ -57,48 +66,7 @@ export function makeHelp(): Intention {
   };
 }
 
-export function makeGrant(data: CascadingData): GrantIntention {
-  const [, , dirtyTargetId, badge] = getTextParts(data);
-  return {
-    action: ACTION_TYPES.grant,
-    targetId: extractId(dirtyTargetId),
-    badge,
-  };
-}
-
-export function makeRemove(data: CascadingData): RemoveIntention {
-  const [, , dirtyTargetId, badge] = getTextParts(data);
-  return {
-    action: ACTION_TYPES.remove,
-    targetId: extractId(dirtyTargetId),
-    badge,
-  };
-}
-
-// "bard" action
-export function makeReveal(data: CascadingData): RevealIntention {
-  const [, , dirtyTargetId] = getTextParts(data);
-  return {
-    action: ACTION_TYPES.reveal,
-    targetId: extractId(dirtyTargetId),
-  };
-}
-
-export function makeUnearth(data: CascadingData): UnearthIntention {
-  const [, , domain] = getTextParts(data);
-  return {
-    action: ACTION_TYPES.unearth,
-    domain,
-  };
-}
-
-export function makeWhoami(): WhoamiIntention {
-  return {
-    action: ACTION_TYPES.whoami,
-  };
-}
-
-export function makeList(data: CascadingData): ListIntention {
+export function makeList(data: IntentionRawData): ListIntention {
   const [, , resource] = getTextParts(data);
   const resourceOpts = Object.values(Listings);
   if (!resourceOpts.includes(resource as any)) {
@@ -112,11 +80,70 @@ export function makeList(data: CascadingData): ListIntention {
   };
 }
 
+export function makeGrant(data: IntentionRawData): GrantIntention {
+  const [, , dirtyTargetId, badge] = getTextParts(data);
+  return {
+    action: ACTION_TYPES.grant,
+    targetId: extractId(dirtyTargetId),
+    badge,
+  };
+}
+
+export function makeRemove(data: IntentionRawData): RemoveIntention {
+  const [, , dirtyTargetId, badge] = getTextParts(data);
+  return {
+    action: ACTION_TYPES.remove,
+    targetId: extractId(dirtyTargetId),
+    badge,
+  };
+}
+
+// "bard" action
+export function makeReveal(data: IntentionRawData): RevealIntention {
+  const [, , dirtyTargetId] = getTextParts(data);
+  return {
+    action: ACTION_TYPES.reveal,
+    targetId: extractId(dirtyTargetId),
+  };
+}
+
+export function makeUnearth(data: IntentionRawData): UnearthIntention {
+  const [, , domain] = getTextParts(data);
+  return {
+    action: ACTION_TYPES.unearth,
+    domain,
+  };
+}
+
+export function makeWhoami(): WhoamiIntention {
+  return {
+    action: ACTION_TYPES.whoami,
+  };
+}
+
+export function makePromote(data: IntentionRawData): PromoteIntention {
+  const [, , dirtyTargetId, domain] = getTextParts(data);
+  return {
+    action: ACTION_TYPES.promote,
+    targetId: extractId(dirtyTargetId),
+    domain,
+  };
+}
+
+export function makeDemote(data: IntentionRawData): DemoteIntention {
+  const [, , dirtyTargetId, domain] = getTextParts(data);
+  return {
+    action: ACTION_TYPES.demote,
+    targetId: extractId(dirtyTargetId),
+    domain,
+  };
+}
+
 /**
  * root
  *
  */
-export function createIntention(data: CascadingData): Intention {
+export function createIntention(data: IntentionRawData): Intention {
   const action = getTextAction(data);
 
   switch (action) {
@@ -142,6 +169,12 @@ export function createIntention(data: CascadingData): Intention {
     // reveal badges|domains
     case ACTION_TYPES.list:
       return makeList(data);
+
+    case ACTION_TYPES.promote:
+      return makePromote(data);
+
+    case ACTION_TYPES.demote:
+      return makeDemote(data);
 
     default:
       return {
