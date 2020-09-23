@@ -1,7 +1,7 @@
 import { Db } from "mongodb";
 import { Context as SlackContext, SlackEvent } from "@slack/bolt";
 import { ACTION_TYPES } from "../../constants";
-import { actorIsAllowed } from "../permissions";
+import { actorIsAllowed, teamIsAllowed } from "../permissions";
 import { createIntention } from "../intentions";
 import { findOrCreateUser } from "../../database/user-facade";
 import { handleGrant } from "./handle-grant";
@@ -12,9 +12,10 @@ import { handleRemove } from "./handle-remove";
 import { handleReveal } from "./handle-reveal";
 import { handleUnearth } from "./handle-unearth";
 import { handleWhoami } from "./handle-whoami";
-import { CascadingData } from "../../types";
+import { CascadingData, TeamDoc } from "../../types";
 import { handleDemote } from "./handle-demote";
 import { handleForge } from "./handle-forge";
+import { findOrCreateTeam } from "../../database/team-facade";
 
 /**
  * root
@@ -27,6 +28,29 @@ export async function handleIntention(data: {
 }): Promise<string> {
   const { context, event, dbSingleton } = data;
 
+  const intention = createIntention({
+    context,
+    event,
+  });
+
+  // IMPROVE
+  // findOrCreate team.
+  // depending on intention,
+  // they may be able to do things here with a free tier account.
+  const teamDoc: TeamDoc = await findOrCreateTeam({ dbSingleton, event });
+  if (!teamDoc) {
+    throw new Error(
+      `Paladin failed to find or register your team in the system.`
+    );
+  }
+  const teamHasPermission = teamIsAllowed(
+    { context, dbSingleton, event, team: teamDoc },
+    intention
+  );
+  if (!teamHasPermission) {
+    throw new Error(`Your team does not have permission to do that.`);
+  }
+
   const actor = await findOrCreateUser({
     dbSingleton,
     team: event.team,
@@ -37,18 +61,12 @@ export async function handleIntention(data: {
     throw new Error(`Paladin failed to find or register <@${event.user}>.`);
   }
 
-  const intention = createIntention({
-    actor,
-    context,
-    event,
-  });
-
-  const hasPermission = await actorIsAllowed(
+  const actorHasPermission = await actorIsAllowed(
     { actor, context, dbSingleton, event },
     intention
   );
 
-  if (!hasPermission) {
+  if (!actorHasPermission) {
     throw new Error(
       `<@${actor.slackUser}> does not have permission to do that.`
     );

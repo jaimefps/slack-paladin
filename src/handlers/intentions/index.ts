@@ -10,13 +10,11 @@ import {
   WhoamiIntention,
   Listings,
   PromoteIntention,
-  UserDoc,
   DemoteIntention,
   ForgeIntention,
 } from "../../types";
 
 interface IntentionRawData {
-  actor: UserDoc;
   context: SlackContext;
   event: SlackEvent;
 }
@@ -25,16 +23,16 @@ interface IntentionRawData {
  * helpers
  *
  */
-export function isValidUserId(user: string): boolean {
-  // improve this validation:
-  return user.match(/[A-Za-z0-9]{11}/) !== null;
+export function throwOnBadBadge(badge: string): void {
+  // IMPROVE
+  const isValid = badge[0] === ":" && badge.slice(-1) === ":";
+  if (!isValid) throw new Error(`Invalid badge emoji submission: \`${badge}\``);
 }
 
 export function extractId(dirtyId: string): string {
   const userId = dirtyId.slice(2, 13);
-  if (!isValidUserId(userId)) {
+  if (!userId.match(/[A-Za-z0-9]{11}/) !== null)
     throw new Error(`Paladin detected invalid user: ${dirtyId}`);
-  }
   return userId;
 }
 
@@ -46,7 +44,7 @@ export function getTextParts({ event: { text } }: IntentionRawData): string[] {
 }
 
 export function getTextAction(data: IntentionRawData): ACTION_TYPES {
-  // improve type checking in this code
+  // IMPROVE
   const candidateAction = getTextParts(data)[1] as any;
   if (
     !candidateAction ||
@@ -83,6 +81,7 @@ export function makeList(data: IntentionRawData): ListIntention {
 
 export function makeGrant(data: IntentionRawData): GrantIntention {
   const [, , dirtyTargetId, badge] = getTextParts(data);
+  throwOnBadBadge(badge);
   return {
     action: ACTION_TYPES.grant,
     targetId: extractId(dirtyTargetId),
@@ -92,6 +91,7 @@ export function makeGrant(data: IntentionRawData): GrantIntention {
 
 export function makeRemove(data: IntentionRawData): RemoveIntention {
   const [, , dirtyTargetId, badge] = getTextParts(data);
+  throwOnBadBadge(badge);
   return {
     action: ACTION_TYPES.remove,
     targetId: extractId(dirtyTargetId),
@@ -142,6 +142,7 @@ export function makeDemote(data: IntentionRawData): DemoteIntention {
 
 export function makeForge(data: IntentionRawData): ForgeIntention {
   const [, , name, badge, domain] = getTextParts(data);
+  throwOnBadBadge(badge);
   return {
     action: ACTION_TYPES.forge,
     name,

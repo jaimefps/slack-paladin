@@ -13,8 +13,6 @@ export async function handleForge(
   let domainDoc: DomainDoc;
   let badgeDoc: BadgeDoc;
 
-  console.log("=================intention", { name, badge, domain });
-
   // find if domain exists;
   // if no, return fail msg
   try {
@@ -27,34 +25,13 @@ export async function handleForge(
     throw new Error(`Paladin failed lookup domain: \`${domain}\``);
   }
 
-  console.log("=================domainDoc", domainDoc);
-
   if (!domainDoc) {
     return `Paladin cannot find any domain called \`${domain}\``;
   }
 
-  // find if badge exists;
-  // if yes, look up parent domain and return fail msg
-  try {
-    badgeDoc = await dbSingleton.collection(DB_COLLECTIONS.badges).findOne({
-      domain: domainDoc._id,
-      slackTeam: team,
-      emoji: badge,
-      name,
-    });
-  } catch (e) {
-    console.error(e);
-    throw new Error(`Paladin failed lookup badge: ${badge}`);
-  }
-
-  console.log("=================badgeDoc", badgeDoc);
-
-  if (badgeDoc) {
+  async function warnDuplication(problem: "name" | "emoji") {
     try {
-      const interruptDomain: DomainDoc = await dbSingleton
-        .collection(DB_COLLECTIONS.domains)
-        .findOne({ _id: badgeDoc.domain });
-      return `A ${badge} badge already exists in the \`${interruptDomain.name}\` domain.`;
+      return `The \`${domainDoc.name}\` domain already has a badge with that ${problem}: ${badgeDoc[problem]}.`;
     } catch (e) {
       console.error(e);
       throw new Error(
@@ -63,11 +40,40 @@ export async function handleForge(
     }
   }
 
+  // IMPROVE
+  // find if badge exists;
+  // check if domain/emoji combo exists
+  // check if domain/name combo exists
+  // if yes, return fail msg
+  try {
+    badgeDoc = await dbSingleton.collection(DB_COLLECTIONS.badges).findOne({
+      domain: domainDoc._id,
+      slackTeam: team,
+      emoji: badge,
+    });
+    if (badgeDoc) return await warnDuplication("emoji");
+  } catch (e) {
+    console.error(e);
+    throw new Error(`Paladin failed lookup badge: ${badge}`);
+  }
+
+  try {
+    badgeDoc = await dbSingleton.collection(DB_COLLECTIONS.badges).findOne({
+      domain: domainDoc._id,
+      slackTeam: team,
+      name,
+    });
+    if (badgeDoc) return await warnDuplication("name");
+  } catch (e) {
+    console.error(e);
+    throw new Error(`Paladin failed lookup badge: ${badge}`);
+  }
+
   // else create badge
   const newBadge: BadgeDoc = {
     name,
-    domain: domainDoc._id,
     emoji: badge,
+    domain: domainDoc._id,
     slackTeam: team,
   };
 

@@ -34,8 +34,6 @@ import { handleHelp } from "./handlers/callbacks/handle-help";
         );
       }
 
-      // find or create team HERE!?
-
       try {
         const text = await handleIntention({
           context,
