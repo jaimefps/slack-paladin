@@ -9,7 +9,7 @@ export async function handleHelp() {
 @paladin ${ACTION_TYPES.whoami}
   => shows own permissions and badges
   
-@paladin ${ACTION_TYPES.reveal} <@user_mention>
+@paladin ${ACTION_TYPES.reveal} <user_mention>
   => shows a user's permissions and badges
 
 @paladin ${ACTION_TYPES.list} badges
@@ -24,16 +24,16 @@ export async function handleHelp() {
 @paladin ${ACTION_TYPES.forge} <badge_name> <badge_emoji> <domain_name>
   => converts user to "villager" in domain
 
-@paladin ${ACTION_TYPES.grant} <@user_mention> <badge_emoji:>
+@paladin ${ACTION_TYPES.grant} <user_mention> <badge_emoji:>
   => gives badge to the user
 
-@paladin ${ACTION_TYPES.remove} <@user_mention> <badge>
+@paladin ${ACTION_TYPES.remove} <user_mention> <badge>
   => removes badge from the user
 
-@paladin ${ACTION_TYPES.promote} <@user_mention> <domain>
+@paladin ${ACTION_TYPES.promote} <user_mention> <domain>
   => promotes user to next level up in selected domain
 
-@paladin ${ACTION_TYPES.demote} <@user_mention> <domain>
+@paladin ${ACTION_TYPES.demote} <user_mention> <domain>
   => converts user to "villager" in domain
 \`\`\`
   `;
