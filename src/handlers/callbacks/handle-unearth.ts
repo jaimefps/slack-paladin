@@ -32,4 +32,8 @@ export async function handleUnearth(
     console.error(e);
     throw new Error(`Paladin failed to create domain: \`${domain}\``);
   }
+
+  // IMPROVE!
+  // use transaction.
+  // Author of the domain is turned into an admin of that domain as well.
 }

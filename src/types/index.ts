@@ -11,6 +11,7 @@ export interface CascadingData {
   context: SlackContext;
   dbSingleton: Db;
   event: SlackEvent;
+  team: TeamDoc;
 }
 
 /**
@@ -69,7 +70,8 @@ export interface UnearthIntention {
 
 export interface BadgeIntention {
   targetId: string;
-  badge: string;
+  badgeName: string;
+  domain: string;
 }
 
 export interface GrantIntention extends BadgeIntention {

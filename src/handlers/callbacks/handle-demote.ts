@@ -33,7 +33,7 @@ export async function handleDemote(
   }
 
   if (!domainDoc) {
-    throw new Error(`Paladin failed to find domain: \`${domain}\``);
+    return `Invalid domain: \`${domain}\``;
   }
 
   if (!userDoc) {
@@ -46,7 +46,7 @@ export async function handleDemote(
 
   // doesn't have domain => "user cannot have lesser permissions"
   if (!userDomainRole) {
-    return `<@${targetId}> is already a \`Villager\` in that domain.`;
+    return `<@${targetId}> is already a \`Villager\` in \`${domain}\`.`;
   }
 
   // has domain, is paladin => remove the entry altogether

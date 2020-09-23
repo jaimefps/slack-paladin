@@ -1,36 +1,55 @@
-import { findOrCreateUser, userHasBadge } from "../../database/user-facade";
-import { BadgeDoc, CascadingData, RemoveIntention, UserDoc } from "../../types";
+import {
+  BadgeDoc,
+  CascadingData,
+  DomainDoc,
+  RemoveIntention,
+  UserDoc,
+} from "../../types";
 import { areSameId } from "../../database/utils";
 import { DB_COLLECTIONS } from "../../constants";
+import { findOrCreateUser, userHasBadge } from "../../database/user-facade";
 
 export async function handleRemove(
   { dbSingleton, event: { team } }: CascadingData,
-  { targetId, badge }: RemoveIntention
+  { targetId, badgeName, domain }: RemoveIntention
 ): Promise<string> {
+  let domainDoc: DomainDoc;
   let badgeDoc: BadgeDoc;
   let userDoc: UserDoc;
 
   try {
-    const getBadge = dbSingleton
-      .collection(DB_COLLECTIONS.badges)
-      .findOne({ slackTeam: team, emoji: badge });
-
-    const getUser = findOrCreateUser({
-      dbSingleton,
-      user: targetId,
-      team,
-    });
-
-    [badgeDoc, userDoc] = await Promise.all([getBadge, getUser]);
+    domainDoc = await dbSingleton
+      .collection(DB_COLLECTIONS.domains)
+      .findOne({ name: domain, slackTeam: team });
   } catch (e) {
     console.error(e);
-    throw new Error(
-      `Paladin failed to find user or badge info for: <@${targetId}>`
-    );
+    throw new Error(`Paladin failed to find domain: \`${domain}\``);
+  }
+
+  if (!domainDoc) {
+    throw new Error(`Invalid domain provided: \`${domain}\``);
+  }
+
+  try {
+    [badgeDoc, userDoc] = await Promise.all([
+      dbSingleton.collection(DB_COLLECTIONS.badges).findOne({
+        slackTeam: team,
+        name: badgeName,
+        domain: domainDoc._id,
+      }),
+      findOrCreateUser({
+        dbSingleton,
+        user: targetId,
+        team,
+      }),
+    ]);
+  } catch (e) {
+    console.error(e);
+    throw new Error(`Paladin failed to find user or badge info.`);
   }
 
   if (!badgeDoc) {
-    throw new Error(`Paladin cannot find badge: ${badge}`);
+    return `\`${badgeName}\` is not a badge in \`${domain}\`.`;
   }
 
   if (!userDoc) {
@@ -38,7 +57,7 @@ export async function handleRemove(
   }
 
   if (!userHasBadge(userDoc, badgeDoc._id)) {
-    return `<@${targetId}> doesn't even have badge ${badge}`;
+    return `<@${targetId}> doesn't have badge \`${badgeName}\``;
   }
 
   try {
@@ -50,9 +69,11 @@ export async function handleRemove(
     await dbSingleton
       .collection(DB_COLLECTIONS.users)
       .updateOne(filter, update);
-    return `${badge} badge removed from <@${targetId}>`;
+    return `\`${badgeName}\` ${badgeDoc.emoji} removed from <@${targetId}>`;
   } catch (e) {
     console.error(e);
-    throw new Error(`Paladin failed to deprive user: <@${targetId}>`);
+    throw new Error(
+      `Paladin failed to deprive <@${targetId}> of \`${badgeName}\``
+    );
   }
 }

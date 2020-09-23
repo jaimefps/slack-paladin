@@ -21,20 +21,20 @@ export async function handleHelp() {
 @paladin ${ACTION_TYPES.unearth} <domain_name>
   => creates a domain with the provided name
 
-@paladin ${ACTION_TYPES.forge} <badge_name> <badge_emoji> <domain_name>
+@paladin ${ACTION_TYPES.forge} <domain_name> <badge_name> <badge_emoji> 
   => converts user to "villager" in domain
 
-@paladin ${ACTION_TYPES.grant} <user_mention> <badge_emoji:>
+@paladin ${ACTION_TYPES.grant} <domain_name> <badge_name> <user_mention>
   => gives badge to the user
 
-@paladin ${ACTION_TYPES.remove} <user_mention> <badge>
+@paladin ${ACTION_TYPES.remove} <domain_name> <badge_name> <user_mention> 
   => removes badge from the user
 
-@paladin ${ACTION_TYPES.promote} <user_mention> <domain>
+@paladin ${ACTION_TYPES.promote} <user_mention> <domain_name>
   => promotes user to next level up in selected domain
 
-@paladin ${ACTION_TYPES.demote} <user_mention> <domain>
-  => converts user to "villager" in domain
+@paladin ${ACTION_TYPES.demote} <user_mention> <domain_name>
+  => demotes user one level down in that domain.
 \`\`\`
   `;
 }

@@ -30,8 +30,12 @@ export function throwOnBadBadge(badge: string): void {
 }
 
 export function extractId(dirtyId: string): string {
-  const userId = dirtyId.slice(2, 13);
-  if (!userId.match(/[A-Za-z0-9]{11}/) !== null)
+  if (!dirtyId)
+    throw new Error(`Cannot find expected user mention for current command.`);
+
+  const userId = dirtyId.slice(2, -1);
+
+  if (userId.match(/[A-Za-z0-9]{11}/) === null)
     throw new Error(`Paladin detected invalid user: ${dirtyId}`);
   return userId;
 }
@@ -80,22 +84,22 @@ export function makeList(data: IntentionRawData): ListIntention {
 }
 
 export function makeGrant(data: IntentionRawData): GrantIntention {
-  const [, , dirtyTargetId, badge] = getTextParts(data);
-  throwOnBadBadge(badge);
+  const [, , domain, badgeName, dirtyTargetId] = getTextParts(data);
   return {
     action: ACTION_TYPES.grant,
     targetId: extractId(dirtyTargetId),
-    badge,
+    badgeName,
+    domain,
   };
 }
 
 export function makeRemove(data: IntentionRawData): RemoveIntention {
-  const [, , dirtyTargetId, badge] = getTextParts(data);
-  throwOnBadBadge(badge);
+  const [, , domain, badgeName, dirtyTargetId] = getTextParts(data);
   return {
     action: ACTION_TYPES.remove,
     targetId: extractId(dirtyTargetId),
-    badge,
+    badgeName,
+    domain,
   };
 }
 
@@ -141,7 +145,7 @@ export function makeDemote(data: IntentionRawData): DemoteIntention {
 }
 
 export function makeForge(data: IntentionRawData): ForgeIntention {
-  const [, , name, badge, domain] = getTextParts(data);
+  const [, , domain, name, badge] = getTextParts(data);
   throwOnBadBadge(badge);
   return {
     action: ACTION_TYPES.forge,

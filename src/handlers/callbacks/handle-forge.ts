@@ -29,9 +29,10 @@ export async function handleForge(
     return `Paladin cannot find any domain called \`${domain}\``;
   }
 
+  // IMPROVE!
   async function warnDuplication(problem: "name" | "emoji") {
     try {
-      return `The \`${domainDoc.name}\` domain already has a badge with that ${problem}: ${badgeDoc[problem]}.`;
+      return `The \`${domainDoc.name}\` domain already has a badge with that ${problem}.`;
     } catch (e) {
       console.error(e);
       throw new Error(
@@ -79,7 +80,7 @@ export async function handleForge(
 
   try {
     await dbSingleton.collection(DB_COLLECTIONS.badges).insertOne(newBadge);
-    return `Paladin forged a new badge ${badge} for the \`${domain}\` domain!`;
+    return `Paladin forged a new badge \`${name}\` ${badge} for the \`${domain}\` domain!`;
   } catch (e) {
     console.error(e);
     throw new Error(`Paladin failed to forge badge: ${badge}`);

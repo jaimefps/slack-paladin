@@ -38,41 +38,48 @@ export async function handleIntention(data: {
   // depending on intention,
   // they may be able to do things here with a free tier account.
   const teamDoc: TeamDoc = await findOrCreateTeam({ dbSingleton, event });
+
   if (!teamDoc) {
     throw new Error(
       `Paladin failed to find or register your team in the system.`
     );
   }
+
   const teamHasPermission = teamIsAllowed(
     { context, dbSingleton, event, team: teamDoc },
     intention
   );
+
   if (!teamHasPermission) {
     throw new Error(`Your team does not have permission to do that.`);
   }
 
-  const actor = await findOrCreateUser({
+  // IMPROVE
+  // findOrCreate actor.
+  // depending on intention, we need to check permissions.
+  const actorDoc = await findOrCreateUser({
     dbSingleton,
     team: event.team,
     user: event.user,
   });
 
-  if (!actor) {
+  if (!actorDoc) {
     throw new Error(`Paladin failed to find or register <@${event.user}>.`);
   }
 
-  const actorHasPermission = await actorIsAllowed(
-    { actor, context, dbSingleton, event },
-    intention
-  );
+  const cascadingData: CascadingData = {
+    ...data,
+    team: teamDoc,
+    actor: actorDoc,
+  };
+
+  const actorHasPermission = await actorIsAllowed(cascadingData, intention);
 
   if (!actorHasPermission) {
     throw new Error(
-      `<@${actor.slackUser}> does not have permission to do that.`
+      `<@${actorDoc.slackUser}> does not have permission to do that.`
     );
   }
-
-  const cascadingData: CascadingData = { ...data, actor };
 
   switch (intention.action) {
     case ACTION_TYPES.help:
@@ -108,11 +115,12 @@ export async function handleIntention(data: {
       return await handleForge(cascadingData, intention);
 
     /**
-     * TODO handle:
+     * IMPROVE easter eggs:
      *
      *  tomato
-     *  clean
+     *  washoff
      */
+
     default:
       throw new Error(`Paladin failed to understand your intentions.`);
   }

@@ -33,7 +33,7 @@ export async function handlePromote(
   }
 
   if (!domainDoc) {
-    throw new Error(`Paladin failed to find domain: \`${domain}\``);
+    return `Invalid domain: \`${domain}\``;
   }
 
   if (!userDoc) {

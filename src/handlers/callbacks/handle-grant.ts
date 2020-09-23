@@ -1,35 +1,54 @@
-import { CascadingData, BadgeDoc, UserDoc, GrantIntention } from "../../types";
+import {
+  CascadingData,
+  BadgeDoc,
+  UserDoc,
+  GrantIntention,
+  DomainDoc,
+} from "../../types";
 import { findOrCreateUser, userHasBadge } from "../../database/user-facade";
 import { DB_COLLECTIONS } from "../../constants";
 
 export async function handleGrant(
   { dbSingleton, event: { team } }: CascadingData,
-  { targetId, badge }: GrantIntention
+  { targetId, badgeName, domain }: GrantIntention
 ): Promise<string> {
+  let domainDoc: DomainDoc;
   let badgeDoc: BadgeDoc;
   let userDoc: UserDoc;
 
   try {
-    const getBadge = dbSingleton
-      .collection(DB_COLLECTIONS.badges)
-      .findOne({ slackTeam: team, emoji: badge });
-
-    const getUser = findOrCreateUser({
-      dbSingleton,
-      user: targetId,
-      team,
-    });
-
-    [badgeDoc, userDoc] = await Promise.all([getBadge, getUser]);
+    domainDoc = await dbSingleton
+      .collection(DB_COLLECTIONS.domains)
+      .findOne({ name: domain, slackTeam: team });
   } catch (e) {
     console.error(e);
-    throw new Error(
-      `Paladin failed to find user or badge info for: <@${targetId}>`
-    );
+    throw new Error(`Paladin failed to find domain: \`${domain}\``);
+  }
+
+  if (!domainDoc) {
+    throw new Error(`Invalid domain provided: \`${domain}\``);
+  }
+
+  try {
+    [badgeDoc, userDoc] = await Promise.all([
+      dbSingleton.collection(DB_COLLECTIONS.badges).findOne({
+        slackTeam: team,
+        name: badgeName,
+        domain: domainDoc._id,
+      }),
+      findOrCreateUser({
+        dbSingleton,
+        user: targetId,
+        team,
+      }),
+    ]);
+  } catch (e) {
+    console.error(e);
+    throw new Error(`Paladin failed to find user or badge info.`);
   }
 
   if (!badgeDoc) {
-    throw new Error(`Paladin doesn't have a badge of: ${badge}`);
+    return `\`${badgeName}\` is not a badge in \`${domain}\`.`;
   }
 
   if (!userDoc) {
@@ -37,7 +56,7 @@ export async function handleGrant(
   }
 
   if (userHasBadge(userDoc, badgeDoc._id)) {
-    return `<@${targetId}> already has ${badge}.`;
+    return `<@${targetId}> already has badge \`${badgeName}\` ${badgeDoc.emoji}.`;
   }
 
   try {
@@ -46,7 +65,7 @@ export async function handleGrant(
     await dbSingleton
       .collection(DB_COLLECTIONS.users)
       .updateOne(filter, update);
-    return `${badge} badge granted to <@${targetId}>`;
+    return `${badgeName} ${badgeDoc.emoji} bestowed upon <@${targetId}>!`;
   } catch (e) {
     console.error(e);
     throw new Error(`Paladin failed to bestow badge upon: <@${targetId}>`);
