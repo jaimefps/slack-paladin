@@ -51,7 +51,7 @@ export async function handleIntention(data: {
   );
 
   if (!teamHasPermission) {
-    throw new Error(`Your team does not have permission to do that.`);
+    return `Your team account does not have permission to do that.`;
   }
 
   // IMPROVE
@@ -76,9 +76,7 @@ export async function handleIntention(data: {
   const actorHasPermission = await actorIsAllowed(cascadingData, intention);
 
   if (!actorHasPermission) {
-    throw new Error(
-      `<@${actorDoc.slackUser}> does not have permission to do that.`
-    );
+    return `<@${actorDoc.slackUser}> does not have permission to do that.`;
   }
 
   switch (intention.action) {

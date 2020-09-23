@@ -40,7 +40,10 @@ export interface BadgeDoc {
   slackTeam: string;
 }
 
-export type UserRole = "admin" | "paladin";
+export enum UserRole {
+  admin = "admin",
+  paladin = "paladin",
+}
 
 export interface DomainRole {
   id: ObjectId;

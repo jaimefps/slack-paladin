@@ -1,37 +1,66 @@
-import { CascadingData, Intention } from "../../types";
-// import { ACTION_TYPES } from "../../constants";
-// import { areSameId } from "../../database/utils";
+import {
+  CascadingData,
+  DomainDoc,
+  DomainRole,
+  Intention,
+  UserRole,
+} from "../../types";
+import { ACTION_TYPES, DB_COLLECTIONS } from "../../constants";
+import { areSameId } from "../../database/utils";
 
-export async function actorIsAllowed(_: CascadingData, __: Intention) {
-  return true;
+export async function actorIsAllowed(
+  { dbSingleton, event: { team }, actor }: CascadingData,
+  intention: Intention
+): Promise<boolean> {
+  switch (intention.action) {
+    case null:
+    case ACTION_TYPES.help:
+      return true;
 
-  // switch (intention.action) {
-  //   case ACTION_TYPES.help:
-  //     return true;
+    // must have PALADIN level permission
+    // in the badge's domain.
+    case ACTION_TYPES.grant:
+    case ACTION_TYPES.remove:
+      // cannot grant/remove badges to/form yourself:
+      if (intention.targetId === actor.slackUser) {
+        return false;
+      }
 
-  //   // a badge can be in multiple domains.
-  //   // must have PALADIN in one of the badge's domains.
-  //   // case ACTION_TYPES.grant:
-  //   // case ACTION_TYPES.remove:
-  //   //   const { domain }: BadgeDoc = await dbSingleton
-  //   //     .collection("badges")
-  //   //     .findOne({ emoji: intention.badge });
-  //   //   return (
-  //   //     actor.domains.filter(
-  //   //       (actDom: DomainRole) =>
-  //   //         areSameId(domain, id) &&
-  //   //         (actDom.role === "admin" || actDom.role === "paladin")
-  //   //     ).length > 0
-  //   //   );
+      try {
+        const domainDoc: DomainDoc = await dbSingleton
+          .collection(DB_COLLECTIONS.domains)
+          .findOne({ name: intention.domain, slackTeam: team });
+        const userDomain: DomainRole = actor.domains.find((d) =>
+          areSameId(domainDoc._id, d.id)
+        );
+        return userDomain
+          ? userDomain.role === UserRole.paladin ||
+              userDomain.role === UserRole.admin
+          : false;
+      } catch (e) {
+        console.log(e);
+        throw new Error(`Failed to lookup domain ${intention.domain}`);
+      }
 
-  //   // must be ADMIN in that domain.
-  //   // case ACTION_TYPES.promote:
-  //   // case ACTION_TYPES.demote:
-  //   //   return !!actorDomains.find(
-  //   //     (actDom: DomainRoles) => actDom.name === badgeOrDomain
-  //   //   );
+    // // must be ADMIN in that domain.
+    // case ACTION_TYPES.promote:
+    // case ACTION_TYPES.demote:
+    // console.log(
+    //   "intention.targetId === actor.slackUser",
+    //   intention.targetId,
+    //   actor.slackUser
+    // );
+    // if (intention.targetId === actor.slackUser) {
+    //   return `You cannot promote or demote yourself.`;
+    // }
+    //   const domain = "test";
+    //   return !!actorDomains.find(
+    //     (actDom: DomainRoles) => actDom.name === badgeOrDomain
+    //   );
 
-  //   default:
-  //     throw new Error("Paladin failed to review permissions");
-  // }
+    default:
+      throw new Error(
+        `Paladin failed confirm permission to ${intention.action}`
+      );
+  }
 }
