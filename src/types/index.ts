@@ -34,7 +34,7 @@ export interface BadgeDoc {
   _id?: ObjectId;
   name: string;
   emoji: string;
-  description: string;
+  description?: string;
   domain: ObjectId;
   slackTeam: string;
 }
@@ -113,6 +113,13 @@ export interface DemoteIntention {
   domain: string;
 }
 
+export interface ForgeIntention {
+  action: ACTION_TYPES.forge;
+  domain: string;
+  badge: string;
+  name: string;
+}
+
 export type Intention =
   | GrantIntention
   | HelpIntention
@@ -122,4 +129,5 @@ export type Intention =
   | UnearthIntention
   | WhoamiIntention
   | PromoteIntention
-  | DemoteIntention;
+  | DemoteIntention
+  | ForgeIntention;

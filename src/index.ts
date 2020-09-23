@@ -3,6 +3,7 @@ require("dotenv").config();
 import { App, ExpressReceiver } from "@slack/bolt";
 import { handleIntention } from "./handlers/callbacks";
 import { createDbSingleton } from "./database";
+import { handleHelp } from "./handlers/callbacks/handle-help";
 
 (async function start() {
   // environment:
@@ -27,6 +28,14 @@ import { createDbSingleton } from "./database";
       console.log("context:", context);
       console.log("event:", event);
 
+      if (!event.team) {
+        throw new Error(
+          "Paladin failed to detect what team this request is coming from."
+        );
+      }
+
+      // find or create team HERE!?
+
       try {
         const text = await handleIntention({
           context,
@@ -49,7 +58,7 @@ import { createDbSingleton } from "./database";
       } catch (err1) {
         try {
           await slackbot.client.chat.postMessage({
-            text: `Error: ${err1.message}`,
+            text: `Error: ${err1.message}\n\n${await handleHelp()}`,
             channel: event.channel,
             token: context.botToken,
             // thread_ts: event.ts,

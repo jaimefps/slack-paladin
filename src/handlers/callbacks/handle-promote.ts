@@ -33,7 +33,7 @@ export async function handlePromote(
   }
 
   if (!domainDoc) {
-    throw new Error(`Paladin failed to find domain: ${domain}`);
+    throw new Error(`Paladin failed to find domain: \`${domain}\``);
   }
 
   if (!userDoc) {
@@ -59,11 +59,11 @@ export async function handlePromote(
       await dbSingleton
         .collection(DB_COLLECTIONS.users)
         .updateOne(filter, update);
-      return `<@${targetId}> has become a \`Paladin\` of ${domain}!`;
+      return `<@${targetId}> has become a \`Paladin\` of \`${domain}\`!`;
     } catch (e) {
       console.error(e);
       throw new Error(
-        `Paladin failed to promote <@${targetId}> in the domain: ${domain}`
+        `Paladin failed to promote <@${targetId}> in the domain: \`${domain}\``
       );
     }
   }
@@ -84,21 +84,21 @@ export async function handlePromote(
       await dbSingleton
         .collection(DB_COLLECTIONS.users)
         .updateOne(filter, update);
-      return `<@${targetId}> has become an \`Admin\` of ${domain}!`;
+      return `<@${targetId}> has become an \`Admin\` of \`${domain}\`!`;
     } catch (e) {
       console.error(e);
       throw new Error(
-        `Paladin failed to promote <@${targetId}> in the domain: ${domain}`
+        `Paladin failed to promote <@${targetId}> in the domain: \`${domain}\``
       );
     }
   }
 
   // has domain, is admin => "user cannot be promoted, already an admin"
   if (userDomainRole === "admin") {
-    return `<@${targetId}> is already an \`Admin\` in ${domain}.`;
+    return `<@${targetId}> is already an \`Admin\` in \`${domain}\`.`;
   }
 
   throw new Error(
-    `Paladin failed to process promotion request for <@${targetId}> in ${domain}`
+    `Paladin failed to process promotion request for <@${targetId}> in \`${domain}\``
   );
 }

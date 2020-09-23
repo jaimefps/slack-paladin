@@ -5,7 +5,7 @@ import {
   DomainDoc,
   Listings,
 } from "../../types";
-import { DB_COLLECTIONS } from "../../constants";
+import { ACTION_TYPES, DB_COLLECTIONS } from "../../constants";
 
 export async function handleList(
   { dbSingleton, event: { team } }: CascadingData,
@@ -20,7 +20,7 @@ export async function handleList(
         .toArray();
     } catch (e) {
       console.error(e);
-      throw new Error(`Paladin failed to lookup badges.`);
+      throw new Error(`Paladin failed to lookup \`badges\`.`);
     }
     return `These are all the badges: ${badgeDocs
       .map((b) => b.emoji)
@@ -36,11 +36,14 @@ export async function handleList(
         .toArray();
     } catch (e) {
       console.error(e);
-      throw new Error(`Paladin failed to lookup domains.`);
+      throw new Error(`Paladin failed to lookup \`domains\`.`);
     }
-    return `These are all the domains: ${domainDocs
-      .map((b) => b.name)
-      .join(", ")}`;
+
+    return domainDocs.length < 1
+      ? `No domains have been created in your team.\nAsk an \`Admin\` to \`${ACTION_TYPES.unearth}\` a new domain for you.`
+      : `These are all the domains: ${domainDocs
+          .map((d) => `\`${d.name}\``)
+          .join(", ")}.`;
   }
 
   switch (resource) {
@@ -51,6 +54,6 @@ export async function handleList(
       return await listDomains();
 
     default:
-      throw new Error(`Paladin failed to reveal list of: ${resource}`);
+      throw new Error(`Paladin failed to reveal list of: \`${resource}\``);
   }
 }

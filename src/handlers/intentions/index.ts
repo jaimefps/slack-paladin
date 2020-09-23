@@ -12,6 +12,7 @@ import {
   PromoteIntention,
   UserDoc,
   DemoteIntention,
+  ForgeIntention,
 } from "../../types";
 
 interface IntentionRawData {
@@ -139,6 +140,16 @@ export function makeDemote(data: IntentionRawData): DemoteIntention {
   };
 }
 
+export function makeForge(data: IntentionRawData): ForgeIntention {
+  const [, , name, badge, domain] = getTextParts(data);
+  return {
+    action: ACTION_TYPES.forge,
+    name,
+    badge,
+    domain,
+  };
+}
+
 /**
  * root
  *
@@ -150,25 +161,28 @@ export function createIntention(data: IntentionRawData): Intention {
     case ACTION_TYPES.help:
       return makeHelp();
 
-    case ACTION_TYPES.grant:
-      return makeGrant(data);
-
-    case ACTION_TYPES.remove:
-      return makeRemove(data);
+    case ACTION_TYPES.whoami:
+      return makeWhoami();
 
     // bard action:
     case ACTION_TYPES.reveal:
       return makeReveal(data);
 
-    case ACTION_TYPES.unearth:
-      return makeUnearth(data);
-
-    case ACTION_TYPES.whoami:
-      return makeWhoami();
-
     // reveal badges|domains
     case ACTION_TYPES.list:
       return makeList(data);
+
+    case ACTION_TYPES.unearth:
+      return makeUnearth(data);
+
+    case ACTION_TYPES.forge:
+      return makeForge(data);
+
+    case ACTION_TYPES.grant:
+      return makeGrant(data);
+
+    case ACTION_TYPES.remove:
+      return makeRemove(data);
 
     case ACTION_TYPES.promote:
       return makePromote(data);

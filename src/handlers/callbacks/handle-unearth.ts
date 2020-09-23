@@ -13,11 +13,11 @@ export async function handleUnearth(
       .findOne({ name: domain });
   } catch (e) {
     console.error(e);
-    throw new Error(`Paladin failed lookup domain: ${domain}`);
+    throw new Error(`Paladin failed lookup domain: \`${domain}\``);
   }
 
   if (domainDoc) {
-    return `A domain already exists with the name of: ${domain}`;
+    return `A domain already exists with the name of: \`${domain}\``;
   }
 
   const newDomain: DomainDoc = {
@@ -26,13 +26,10 @@ export async function handleUnearth(
   };
 
   try {
-    const result = await dbSingleton
-      .collection(DB_COLLECTIONS.domains)
-      .insertOne(newDomain);
-    console.log("resulkt", result.insertedId);
-    return `Paladin unearthed a new domain: ${domain}!`;
+    await dbSingleton.collection(DB_COLLECTIONS.domains).insertOne(newDomain);
+    return `Paladin unearthed a new domain: \`${domain}\`!`;
   } catch (e) {
     console.error(e);
-    throw new Error(`Paladin failed to create domain: ${domain}`);
+    throw new Error(`Paladin failed to create domain: \`${domain}\``);
   }
 }

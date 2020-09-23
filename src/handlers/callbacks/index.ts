@@ -12,8 +12,9 @@ import { handleRemove } from "./handle-remove";
 import { handleReveal } from "./handle-reveal";
 import { handleUnearth } from "./handle-unearth";
 import { handleWhoami } from "./handle-whoami";
-import { CascadingData } from "src/types";
+import { CascadingData } from "../../types";
 import { handleDemote } from "./handle-demote";
+import { handleForge } from "./handle-forge";
 
 /**
  * root
@@ -25,12 +26,6 @@ export async function handleIntention(data: {
   dbSingleton: Db;
 }): Promise<string> {
   const { context, event, dbSingleton } = data;
-
-  if (!event.team) {
-    throw new Error(
-      "Paladin failed to detect what team this request is coming from."
-    );
-  }
 
   const actor = await findOrCreateUser({
     dbSingleton,
@@ -76,14 +71,14 @@ export async function handleIntention(data: {
     case ACTION_TYPES.list:
       return await handleList(cascadingData, intention);
 
+    case ACTION_TYPES.unearth:
+      return await handleUnearth(cascadingData, intention);
+
     case ACTION_TYPES.grant:
       return await handleGrant(cascadingData, intention);
 
     case ACTION_TYPES.remove:
       return await handleRemove(cascadingData, intention);
-
-    case ACTION_TYPES.unearth:
-      return await handleUnearth(cascadingData, intention);
 
     case ACTION_TYPES.promote:
       return await handlePromote(cascadingData, intention);
@@ -91,17 +86,16 @@ export async function handleIntention(data: {
     case ACTION_TYPES.demote:
       return await handleDemote(cascadingData, intention);
 
+    case ACTION_TYPES.forge:
+      return await handleForge(cascadingData, intention);
+
     /**
      * TODO handle:
-     *
-     *  forge
      *
      *  tomato
      *  clean
      */
     default:
-      throw new Error(
-        `Paladin failed to understand your intentions:\n\n${await handleHelp()}`
-      );
+      throw new Error(`Paladin failed to understand your intentions.`);
   }
 }

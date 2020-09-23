@@ -33,7 +33,7 @@ export async function handleDemote(
   }
 
   if (!domainDoc) {
-    throw new Error(`Paladin failed to find domain: ${domain}`);
+    throw new Error(`Paladin failed to find domain: \`${domain}\``);
   }
 
   if (!userDoc) {
@@ -60,11 +60,11 @@ export async function handleDemote(
       await dbSingleton
         .collection(DB_COLLECTIONS.users)
         .updateOne(filter, update);
-      return `<@${targetId}> has become an \`Villager\` of ${domain}!`;
+      return `<@${targetId}> has become an \`Villager\` of \`${domain}\`!`;
     } catch (e) {
       console.error(e);
       throw new Error(
-        `Paladin failed to demote <@${targetId}> in the domain: ${domain}`
+        `Paladin failed to demote <@${targetId}> in the domain: \`${domain}\``
       );
     }
   }
@@ -85,16 +85,16 @@ export async function handleDemote(
       await dbSingleton
         .collection(DB_COLLECTIONS.users)
         .updateOne(filter, update);
-      return `<@${targetId}> has become a \`Paladin\` of ${domain}!`;
+      return `<@${targetId}> has become a \`Paladin\` of \`${domain}\`!`;
     } catch (e) {
       console.error(e);
       throw new Error(
-        `Paladin failed to demote <@${targetId}> in the domain: ${domain}`
+        `Paladin failed to demote <@${targetId}> in the domain: \`${domain}\``
       );
     }
   }
 
   throw new Error(
-    `Paladin failed to process demotion request for <@${targetId}> in ${domain}`
+    `Paladin failed to process demotion request for <@${targetId}> in \`${domain}\``
   );
 }
