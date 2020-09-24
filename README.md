@@ -1,15 +1,6 @@
 # Paladin
 
-Slack bot for tracking user achievements within your team or company.
-Paladin attributes achievements badges to members:
-
-`/paladin give @user badge <badge-name>`
-
-Paladin can later show other peoples badges:
-
-`/paladin show @user badges`
-
-You can further configure your Paladin account in our webapp in order to define available badges and distribute permissions to give out badges to users.
+# TODO create dev setup docs
 
 ## Install ngrok for local development
 
@@ -39,4 +30,4 @@ yarn watch
 More reading on Slack and NGROK:
 https://api.slack.com/tutorials/tunneling-with-ngrok
 
-##
+## ...
