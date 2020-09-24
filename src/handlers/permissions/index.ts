@@ -27,21 +27,29 @@ export async function gatherCredentials(
     throw new Error(`Paladin failed to find or register <@${event.user}>.`);
   }
 
-  const teamHasPermission = teamIsAllowed(
-    { ...data, team: teamDoc },
-    intention
-  );
-
-  if (!teamHasPermission) {
+  if (
+    !(await teamIsAllowed(
+      {
+        ...data,
+        team: teamDoc,
+        actor: actorDoc,
+      },
+      intention
+    ))
+  ) {
     throw new Error(`Your team account does not have permission to do that.`);
   }
 
-  const actorHasPermission = await actorIsAllowed(
-    { ...data, actor: actorDoc },
-    intention
-  );
-
-  if (!actorHasPermission) {
+  if (
+    !(await actorIsAllowed(
+      {
+        ...data,
+        actor: actorDoc,
+        team: teamDoc,
+      },
+      intention
+    ))
+  ) {
     throw new Error(
       `<@${actorDoc.slackUser}> does not have permission to do that.`
     );

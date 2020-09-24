@@ -1,15 +1,5 @@
-import { Db } from "mongodb";
-import { Context as SlackContext, SlackEvent } from "@slack/bolt";
-import { Intention, TeamDoc } from "../../types";
+import { CascadingData, Intention } from "../../types";
 
-export async function teamIsAllowed(
-  {}: {
-    context: SlackContext;
-    event: SlackEvent;
-    dbSingleton: Db;
-    team: TeamDoc;
-  },
-  _: Intention
-) {
+export async function teamIsAllowed(_: CascadingData, __: Intention) {
   return true;
 }

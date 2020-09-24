@@ -1,68 +1,62 @@
+import { ACTION_TYPES, DB_COLLECTIONS } from "../../constants";
+import { areSameId } from "../../database/utils";
 import {
+  CascadingData,
   DomainDoc,
   DomainRole,
   Intention,
-  UserDoc,
   UserRole,
 } from "../../types";
-import { ACTION_TYPES, DB_COLLECTIONS } from "../../constants";
-import { areSameId } from "../../database/utils";
-import { Db } from "mongodb";
-import { Context, SlackEvent } from "@slack/bolt";
 
-interface ActorPermissionArgs {
-  dbSingleton: Db;
-  event: SlackEvent;
-  actor: UserDoc;
-  context: Context;
+export async function actorHasMinLevel(
+  data: CascadingData,
+  domainName: string,
+  requiredLevel: UserRole
+): Promise<boolean> {
+  const {
+    dbSingleton,
+    event: { team },
+    actor,
+  } = data;
+
+  const LEVELS = Object.values(UserRole);
+  let userDomain: DomainRole;
+
+  try {
+    const domainDoc: DomainDoc = await dbSingleton
+      .collection(DB_COLLECTIONS.domains)
+      .findOne({ name: domainName, slackTeam: team });
+    userDomain = actor.domains.find((d) => areSameId(domainDoc._id, d.id));
+  } catch (e) {
+    console.log(e);
+    throw new Error(`Failed to lookup actor roles for \`${domainName}\`.`);
+  }
+
+  return userDomain
+    ? LEVELS.indexOf(userDomain.role) <= LEVELS.indexOf(requiredLevel)
+    : false;
 }
 
 export async function actorIsAllowed(
-  { dbSingleton, event: { team }, actor }: ActorPermissionArgs,
+  data: CascadingData,
   intention: Intention
 ): Promise<boolean> {
   switch (intention.action) {
-    // must have PALADIN level permission
-    // in the badge's domain.
+    // PALADIN LEVEL:
     case ACTION_TYPES.grant:
     case ACTION_TYPES.remove:
-      // cannot grant/remove badges to/form yourself:
-      if (intention.targetId === actor.slackUser) {
-        return false;
-      }
+      // cannot target self:
+      if (intention.targetId === data.actor.slackUser) return false;
+      return await actorHasMinLevel(data, intention.domain, UserRole.paladin);
 
-      try {
-        const domainDoc: DomainDoc = await dbSingleton
-          .collection(DB_COLLECTIONS.domains)
-          .findOne({ name: intention.domain, slackTeam: team });
-        const userDomain: DomainRole = actor.domains.find((d) =>
-          areSameId(domainDoc._id, d.id)
-        );
-        return userDomain
-          ? userDomain.role === UserRole.paladin ||
-              userDomain.role === UserRole.admin
-          : false;
-      } catch (e) {
-        console.log(e);
-        throw new Error(`Failed to lookup domain ${intention.domain}`);
-      }
+    // ADMIN LEVEL:
+    case ACTION_TYPES.promote:
+    case ACTION_TYPES.demote:
+    case ACTION_TYPES.unearth:
+    case ACTION_TYPES.forge:
+      return await actorHasMinLevel(data, intention.domain, UserRole.admin);
 
-    // // must be ADMIN in that domain.
-    // case ACTION_TYPES.promote:
-    // case ACTION_TYPES.demote:
-    // console.log(
-    //   "intention.targetId === actor.slackUser",
-    //   intention.targetId,
-    //   actor.slackUser
-    // );
-    // if (intention.targetId === actor.slackUser) {
-    //   return `You cannot promote or demote yourself.`;
-    // }
-    //   const domain = "test";
-    //   return !!actorDomains.find(
-    //     (actDom: DomainRoles) => actDom.name === badgeOrDomain
-    //   );
-
+    // non-protected actions:
     default:
       return true;
   }
