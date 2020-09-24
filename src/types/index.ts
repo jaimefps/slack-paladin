@@ -6,11 +6,14 @@ import { ACTION_TYPES } from "../constants";
  * Global Data Interface
  *
  */
-export interface CascadingData {
-  actor: UserDoc;
+export interface CascadingRoot {
   context: SlackContext;
   dbSingleton: Db;
   event: SlackEvent;
+}
+
+export interface CascadingData extends CascadingRoot {
+  actor: UserDoc;
   team: TeamDoc;
 }
 

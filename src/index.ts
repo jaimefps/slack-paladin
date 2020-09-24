@@ -5,7 +5,7 @@ import { handleIntention } from "./handlers/callbacks";
 import { createDbSingleton } from "./database";
 import { handleHelp } from "./handlers/callbacks/handle-help";
 
-(async function start() {
+(async function start(): Promise<void> {
   // environment:
   const PORT = process.env.PORT || 4390;
   const token = process.env.SLACK_BOT_TOKEN;
@@ -24,9 +24,21 @@ import { handleHelp } from "./handlers/callbacks/handle-help";
   slackbot.event(
     "app_mention",
     async ({ context, event }): Promise<void> => {
-      console.log("time:", new Date());
+      const time = new Date().toJSON();
+      console.log("start:", time);
       console.log("context:", context);
       console.log("event:", event);
+      console.time(time);
+
+      async function reply(text: string): Promise<void> {
+        await slackbot.client.chat.postMessage({
+          text,
+          channel: event.channel,
+          token: context.botToken,
+          thread_ts:
+            process.env.NODE_ENV === "development" ? undefined : event.ts,
+        });
+      }
 
       if (!event.team) {
         throw new Error(
@@ -34,36 +46,35 @@ import { handleHelp } from "./handlers/callbacks/handle-help";
         );
       }
 
+      let replyMsg;
+
       try {
-        const text = await handleIntention({
+        replyMsg = await handleIntention({
           context,
           dbSingleton,
           event,
         });
 
-        if (!text) {
+        if (!replyMsg) {
           throw new Error(
             `Paladin unsure if action was completed. Please try again or reach out to support.`
           );
         }
 
-        await slackbot.client.chat.postMessage({
-          text,
-          channel: event.channel,
-          token: context.botToken,
-          // thread_ts: event.ts,
-        });
+        console.timeEnd(time);
+        return await reply(replyMsg);
       } catch (err1) {
-        try {
-          await slackbot.client.chat.postMessage({
-            text: `Error: ${err1.message}\n\n${await handleHelp()}`,
-            channel: event.channel,
-            token: context.botToken,
-            // thread_ts: event.ts,
-          });
-        } catch (err2) {
-          console.error(err2);
-        }
+        console.error(err1);
+        replyMsg = `Error: ${err1.message || err1}\n\n${await handleHelp()}`;
+      }
+
+      try {
+        // reply with error message:
+        console.timeEnd(time);
+        return await reply(replyMsg);
+      } catch (err2) {
+        // fatal error
+        console.error(err2);
       }
     }
   );

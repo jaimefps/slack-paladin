@@ -1,22 +1,27 @@
 import {
-  CascadingData,
   DomainDoc,
   DomainRole,
   Intention,
+  UserDoc,
   UserRole,
 } from "../../types";
 import { ACTION_TYPES, DB_COLLECTIONS } from "../../constants";
 import { areSameId } from "../../database/utils";
+import { Db } from "mongodb";
+import { Context, SlackEvent } from "@slack/bolt";
+
+interface ActorPermissionArgs {
+  dbSingleton: Db;
+  event: SlackEvent;
+  actor: UserDoc;
+  context: Context;
+}
 
 export async function actorIsAllowed(
-  { dbSingleton, event: { team }, actor }: CascadingData,
+  { dbSingleton, event: { team }, actor }: ActorPermissionArgs,
   intention: Intention
 ): Promise<boolean> {
   switch (intention.action) {
-    case null:
-    case ACTION_TYPES.help:
-      return true;
-
     // must have PALADIN level permission
     // in the badge's domain.
     case ACTION_TYPES.grant:
@@ -59,8 +64,6 @@ export async function actorIsAllowed(
     //   );
 
     default:
-      throw new Error(
-        `Paladin failed confirm permission to ${intention.action}`
-      );
+      return true;
   }
 }
