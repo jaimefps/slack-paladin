@@ -1,3 +1,5 @@
+import { TransactionOptions } from "mongodb";
+
 export enum ACTION_TYPES {
   help = "help", // show commands
 
@@ -28,3 +30,10 @@ export enum DB_COLLECTIONS {
   domains = "domains",
   teams = "teams",
 }
+
+// IMPROVE?
+export const transactionOpts: TransactionOptions = {
+  readPreference: "primary",
+  readConcern: { level: "local" },
+  writeConcern: { w: "majority" },
+};

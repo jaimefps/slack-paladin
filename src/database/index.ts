@@ -31,5 +31,8 @@ export async function createDbSingleton() {
     });
   });
 
-  return client.db(getDBName());
+  return {
+    dbClient: client,
+    dbSingleton: client.db(getDBName()),
+  };
 }

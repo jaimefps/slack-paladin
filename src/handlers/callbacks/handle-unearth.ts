@@ -1,39 +1,66 @@
-import { CascadingData, DomainDoc, UnearthIntention } from "../../types";
-import { DB_COLLECTIONS } from "../../constants";
+import {
+  CascadingData,
+  DomainDoc,
+  DomainRole,
+  UnearthIntention,
+  UserRole,
+} from "../../types";
+import { DB_COLLECTIONS, transactionOpts } from "../../constants";
 
 export async function handleUnearth(
-  { dbSingleton, event: { team } }: CascadingData,
+  { dbSingleton, dbClient, event: { team }, actor }: CascadingData,
   { domain }: UnearthIntention
 ): Promise<string> {
   let domainDoc: DomainDoc;
 
-  try {
-    domainDoc = await dbSingleton
-      .collection(DB_COLLECTIONS.domains)
-      .findOne({ name: domain });
-  } catch (e) {
-    console.error(e);
-    throw new Error(`Paladin failed lookup domain: \`${domain}\``);
-  }
-
-  if (domainDoc) {
-    return `A domain already exists with the name of: \`${domain}\``;
-  }
-
-  const newDomain: DomainDoc = {
-    name: domain,
-    slackTeam: team as string,
-  };
+  const session = dbClient.startSession();
 
   try {
-    await dbSingleton.collection(DB_COLLECTIONS.domains).insertOne(newDomain);
-    return `Paladin unearthed a new domain: \`${domain}\`!`;
+    await session.withTransaction(async () => {
+      domainDoc = await dbSingleton
+        .collection(DB_COLLECTIONS.domains)
+        .findOne({ name: domain }, { session });
+
+      if (domainDoc) {
+        throw new Error(
+          `A domain already exists with the name of: \`${domain}\``
+        );
+      }
+
+      const newDomain = await dbSingleton
+        .collection(DB_COLLECTIONS.domains)
+        .insertOne(
+          {
+            name: domain,
+            slackTeam: team as string,
+          } as DomainDoc,
+          { session }
+        );
+
+      const domains: DomainRole[] = [
+        ...actor.domains,
+        {
+          role: UserRole.admin,
+          id: newDomain.insertedId,
+        },
+      ];
+
+      // actor that creates a new domain
+      // is set to be a UserRole.admin of that domain.
+      await dbSingleton
+        .collection(DB_COLLECTIONS.users)
+        .findOneAndUpdate(
+          { _id: actor._id },
+          { $set: { domains } },
+          { session }
+        );
+    }, transactionOpts);
   } catch (e) {
     console.error(e);
     throw new Error(`Paladin failed to create domain: \`${domain}\``);
+  } finally {
+    await session.endSession();
   }
 
-  // IMPROVE!
-  // use transaction.
-  // Author of the domain is turned into an admin of that domain as well.
+  return `Paladin unearthed a new domain: \`${domain}\`!`;
 }

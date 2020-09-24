@@ -1,5 +1,5 @@
 import { Context as SlackContext, SlackEvent } from "@slack/bolt";
-import { Db, ObjectId } from "mongodb";
+import { Db, MongoClient, ObjectId } from "mongodb";
 import { ACTION_TYPES } from "../constants";
 
 /**
@@ -8,6 +8,7 @@ import { ACTION_TYPES } from "../constants";
  */
 export interface CascadingRoot {
   context: SlackContext;
+  dbClient: MongoClient;
   dbSingleton: Db;
   event: SlackEvent;
 }

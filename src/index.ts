@@ -3,7 +3,7 @@ require("dotenv").config();
 import { App, ExpressReceiver } from "@slack/bolt";
 import { handleIntention } from "./handlers/callbacks";
 import { createDbSingleton } from "./database";
-import { handleHelp } from "./handlers/callbacks/handle-help";
+import { ACTION_TYPES } from "./constants";
 
 (async function start(): Promise<void> {
   // environment:
@@ -12,7 +12,7 @@ import { handleHelp } from "./handlers/callbacks/handle-help";
   const signingSecret = process.env.SLACK_SIGNING_SECRET;
 
   // singletons:
-  const dbSingleton = await createDbSingleton();
+  const { dbSingleton, dbClient } = await createDbSingleton();
   const restClient = new ExpressReceiver({ signingSecret });
   const slackbot = new App({ token, receiver: restClient });
 
@@ -25,10 +25,10 @@ import { handleHelp } from "./handlers/callbacks/handle-help";
     "app_mention",
     async ({ context, event }): Promise<void> => {
       const time = new Date().toJSON();
-      console.log("start:", time);
+      console.time(time);
+      console.log(time, "INCOMING REQUEST");
       console.log("context:", context);
       console.log("event:", event);
-      console.time(time);
 
       async function reply(text: string): Promise<void> {
         await slackbot.client.chat.postMessage({
@@ -51,6 +51,7 @@ import { handleHelp } from "./handlers/callbacks/handle-help";
       try {
         replyMsg = await handleIntention({
           context,
+          dbClient,
           dbSingleton,
           event,
         });
@@ -63,18 +64,18 @@ import { handleHelp } from "./handlers/callbacks/handle-help";
 
         console.timeEnd(time);
         return await reply(replyMsg);
-      } catch (err1) {
-        console.error(err1);
-        replyMsg = `Error: ${err1.message || err1}\n\n${await handleHelp()}`;
+      } catch (e) {
+        console.error(e);
+        replyMsg = `Error: ${e.message}\n\n\`@paladin ${ACTION_TYPES.help}\` to show available commands.`;
       }
 
       try {
         // reply with error message:
         console.timeEnd(time);
         return await reply(replyMsg);
-      } catch (err2) {
+      } catch (e) {
         // fatal error
-        console.error(err2);
+        console.error(e);
       }
     }
   );

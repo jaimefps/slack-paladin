@@ -8,7 +8,7 @@ import {
   UserRole,
 } from "../../types";
 
-export async function actorHasMinLevel(
+export async function actorHasMinDomainLevel(
   data: CascadingData,
   domainName: string,
   requiredLevel: UserRole
@@ -20,17 +20,24 @@ export async function actorHasMinLevel(
   } = data;
 
   const LEVELS = Object.values(UserRole);
-  let userDomain: DomainRole;
+  let domainDoc: DomainDoc;
 
   try {
-    const domainDoc: DomainDoc = await dbSingleton
+    domainDoc = await dbSingleton
       .collection(DB_COLLECTIONS.domains)
       .findOne({ name: domainName, slackTeam: team });
-    userDomain = actor.domains.find((d) => areSameId(domainDoc._id, d.id));
   } catch (e) {
     console.log(e);
     throw new Error(`Failed to lookup actor roles for \`${domainName}\`.`);
   }
+
+  if (!domainDoc) {
+    throw new Error(`Invalid domain provided \`${domainName}\``);
+  }
+
+  const userDomain: DomainRole = actor.domains.find((d) =>
+    areSameId(domainDoc._id, d.id)
+  );
 
   return userDomain
     ? LEVELS.indexOf(userDomain.role) <= LEVELS.indexOf(requiredLevel)
@@ -42,19 +49,30 @@ export async function actorIsAllowed(
   intention: Intention
 ): Promise<boolean> {
   switch (intention.action) {
-    // PALADIN LEVEL:
+    // PALADIN LEVEL for that domain:
     case ACTION_TYPES.grant:
     case ACTION_TYPES.remove:
       // cannot target self:
       if (intention.targetId === data.actor.slackUser) return false;
-      return await actorHasMinLevel(data, intention.domain, UserRole.paladin);
+      return await actorHasMinDomainLevel(
+        data,
+        intention.domain,
+        UserRole.paladin
+      );
 
-    // ADMIN LEVEL:
+    // ADMIN LEVEL for that domain:
     case ACTION_TYPES.promote:
     case ACTION_TYPES.demote:
-    case ACTION_TYPES.unearth:
     case ACTION_TYPES.forge:
-      return await actorHasMinLevel(data, intention.domain, UserRole.admin);
+      return await actorHasMinDomainLevel(
+        data,
+        intention.domain,
+        UserRole.admin
+      );
+
+    // ADMIN in any one domain:
+    case ACTION_TYPES.unearth:
+      return !!data.actor.domains.find((dr) => dr.role === UserRole.admin);
 
     // non-protected actions:
     default:
