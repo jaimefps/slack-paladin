@@ -27,7 +27,7 @@ export async function actorHasMinDomainLevel(
       .collection(DB_COLLECTIONS.domains)
       .findOne({ name: domainName, slackTeam: team });
   } catch (e) {
-    console.log(e);
+    console.error(e);
     throw new Error(`Failed to lookup actor roles for \`${domainName}\`.`);
   }
 

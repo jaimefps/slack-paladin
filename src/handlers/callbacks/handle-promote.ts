@@ -3,6 +3,7 @@ import {
   UserDoc,
   PromoteIntention,
   DomainDoc,
+  UserRole,
 } from "../../types";
 import { findOrCreateUser } from "../../database/user-facade";
 import { DB_COLLECTIONS } from "../../constants";
@@ -38,6 +39,11 @@ export async function handlePromote(
 
   if (!userDoc) {
     throw new Error(`Paladin failed to find user: <@${targetId}>`);
+  }
+
+  const userDoms = userDoc.domains.filter((dr) => dr.role === UserRole.admin);
+  if (userDoms.length >= 3) {
+    return `You cannot promote that user. They are already Admins in ${userDoms.length} domains.`;
   }
 
   const userDomainRole =

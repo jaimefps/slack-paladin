@@ -49,7 +49,6 @@ event: {
     async ({ context, event }): Promise<void> => {
       const startTime = new Date().toJSON();
       console.time(startTime);
-      console.log(startTime);
       console.log("context:", context);
       console.log("event:", event);
 

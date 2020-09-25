@@ -13,6 +13,11 @@ export async function handleUnearth(
 ): Promise<string> {
   let domainDoc: DomainDoc;
 
+  const adminDoms = actor.domains.filter((dr) => dr.role === UserRole.admin);
+  if (adminDoms.length >= 3) {
+    return `You cannot unearth more domains. You are already an Admin in ${adminDoms.length} domains.`;
+  }
+
   const session = dbClient.startSession();
 
   try {
