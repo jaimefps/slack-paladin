@@ -2,6 +2,8 @@
 
 # TODO create dev setup docs
 
+# TODO explain rules, admin limits, etc.
+
 ## Install ngrok for local development
 
 1. create an account in ngrok; go to ngrok.com
