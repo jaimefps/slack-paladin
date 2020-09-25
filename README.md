@@ -1,5 +1,7 @@
 # Paladin
 
+# TODO create database wrapper functions for cleaner code
+
 # TODO create dev setup docs
 
 # TODO explain rules, admin limits, etc.
