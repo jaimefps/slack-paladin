@@ -1,9 +1,32 @@
 require("dotenv").config();
 
 import { App, ExpressReceiver } from "@slack/bolt";
-import { handleIntention } from "./handlers/callbacks";
+import { handleEvent } from "./handlers/callbacks";
 import { createDbSingleton } from "./database";
 import { ACTION_TYPES } from "./constants";
+
+/*
+
+context: {
+  botToken: 'xoxb-1329271402389-1371823076981-I3qolQIOAaJoxKdGNlAiUWi5',
+  botUserId: 'U01AXQ728UV',
+  botId: 'B01BQN79EJU',
+  updateConversation: [Function]
+}
+
+event: {
+  client_msg_id: '2b596a60-35c2-46d4-8b2d-01925e8de69a',
+  type: 'app_mention',
+  text: '<@U01AXQ728UV> whoami',
+  user: 'U01AG5STD24',
+  ts: '1601000143.001900',
+  team: 'T019P7ZBUBF',
+  blocks: [ { type: 'rich_text', block_id: 'd/n', elements: [Array] } ],
+  channel: 'G01AY220EFP',
+  event_ts: '1601000143.001900'
+}
+
+*/
 
 (async function start(): Promise<void> {
   // environment:
@@ -24,9 +47,9 @@ import { ACTION_TYPES } from "./constants";
   slackbot.event(
     "app_mention",
     async ({ context, event }): Promise<void> => {
-      const time = new Date().toJSON();
-      console.time(time);
-      console.log(time, "INCOMING REQUEST");
+      const startTime = new Date().toJSON();
+      console.time(startTime);
+      console.log(startTime);
       console.log("context:", context);
       console.log("event:", event);
 
@@ -49,7 +72,7 @@ import { ACTION_TYPES } from "./constants";
       let replyMsg;
 
       try {
-        replyMsg = await handleIntention({
+        replyMsg = await handleEvent({
           context,
           dbClient,
           dbSingleton,
@@ -62,7 +85,7 @@ import { ACTION_TYPES } from "./constants";
           );
         }
 
-        console.timeEnd(time);
+        console.timeEnd(startTime);
         return await reply(replyMsg);
       } catch (e) {
         console.error(e);
@@ -71,7 +94,7 @@ import { ACTION_TYPES } from "./constants";
 
       try {
         // reply with error message:
-        console.timeEnd(time);
+        console.timeEnd(startTime);
         return await reply(replyMsg);
       } catch (e) {
         // fatal error

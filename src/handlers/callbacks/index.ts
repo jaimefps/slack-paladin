@@ -17,7 +17,7 @@ import { CascadingData, CascadingRoot } from "../../types";
  * root
  *
  */
-export async function handleIntention(data: CascadingRoot): Promise<string> {
+export async function handleEvent(data: CascadingRoot): Promise<string> {
   const intention = createIntention(data);
   const { team, actor } = await gatherCredentials(data, intention);
   const cascadingData: CascadingData = { ...data, team, actor };

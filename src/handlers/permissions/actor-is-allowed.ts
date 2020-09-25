@@ -49,7 +49,7 @@ export async function actorIsAllowed(
   intention: Intention
 ): Promise<boolean> {
   switch (intention.action) {
-    // PALADIN LEVEL for that domain:
+    // PALADIN LEVEL for respective domain:
     case ACTION_TYPES.grant:
     case ACTION_TYPES.remove:
       // cannot target self:
@@ -60,7 +60,7 @@ export async function actorIsAllowed(
         UserRole.paladin
       );
 
-    // ADMIN LEVEL for that domain:
+    // ADMIN LEVEL for respective domain:
     case ACTION_TYPES.promote:
     case ACTION_TYPES.demote:
     case ACTION_TYPES.forge:
@@ -70,7 +70,7 @@ export async function actorIsAllowed(
         UserRole.admin
       );
 
-    // ADMIN in any one domain:
+    // ADMIN LEVEL in any domain:
     case ACTION_TYPES.unearth:
       return !!data.actor.domains.find((dr) => dr.role === UserRole.admin);
 

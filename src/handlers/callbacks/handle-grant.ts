@@ -36,6 +36,7 @@ export async function handleGrant(
         name: badgeName,
         domain: domainDoc._id,
       }),
+
       findOrCreateUser({
         dbSingleton,
         user: targetId,
@@ -65,7 +66,7 @@ export async function handleGrant(
     await dbSingleton
       .collection(DB_COLLECTIONS.users)
       .updateOne(filter, update);
-    return `${badgeName} ${badgeDoc.emoji} bestowed upon <@${targetId}>!`;
+    return `\`${badgeName}\` ${badgeDoc.emoji} bestowed upon <@${targetId}>!`;
   } catch (e) {
     console.error(e);
     throw new Error(`Paladin failed to bestow badge upon: <@${targetId}>`);

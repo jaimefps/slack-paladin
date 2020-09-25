@@ -12,6 +12,7 @@ export async function gatherCredentials(
 
   const [teamDoc, actorDoc]: [TeamDoc, UserDoc] = await Promise.all([
     findOrCreateTeam({ dbSingleton, event }),
+
     findOrCreateUser({
       dbSingleton,
       team: event.team,

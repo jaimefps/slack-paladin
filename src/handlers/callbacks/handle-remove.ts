@@ -37,6 +37,7 @@ export async function handleRemove(
         name: badgeName,
         domain: domainDoc._id,
       }),
+
       findOrCreateUser({
         dbSingleton,
         user: targetId,
