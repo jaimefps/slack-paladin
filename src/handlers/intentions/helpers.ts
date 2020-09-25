@@ -12,8 +12,8 @@ export function extractId(dirtyId: string): string {
     throw new Error(`Cannot find expected user mention for current command.`);
 
   const userId = dirtyId.slice(2, -1);
-
-  if (userId.match(/[A-Za-z0-9]{11}/) === null)
+  // IMPROVE
+  if (userId.match(/[A-Za-z0-9]/) === null)
     throw new Error(`Paladin detected invalid user: ${dirtyId}`);
   return userId;
 }

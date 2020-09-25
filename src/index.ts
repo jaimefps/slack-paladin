@@ -57,8 +57,7 @@ event: {
           text,
           channel: event.channel,
           token: context.botToken,
-          thread_ts:
-            process.env.NODE_ENV === "development" ? undefined : event.ts,
+          thread_ts: event.ts,
         });
       }
 

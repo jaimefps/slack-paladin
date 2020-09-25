@@ -60,6 +60,7 @@ export interface UserDoc {
   domains: DomainRole[];
   slackTeam: string;
   slackUser: string;
+  superuser?: boolean;
 }
 
 /**

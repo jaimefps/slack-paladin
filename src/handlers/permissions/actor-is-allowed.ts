@@ -48,6 +48,9 @@ export async function actorIsAllowed(
   data: CascadingData,
   intention: Intention
 ): Promise<boolean> {
+  if (data.actor.superuser) {
+    return true;
+  }
   switch (intention.action) {
     // PALADIN LEVEL for respective domain:
     case ACTION_TYPES.grant:
