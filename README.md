@@ -1,10 +1,10 @@
 # Paladin
 
-# TODO create database wrapper functions for cleaner code
+## TODO
 
-# TODO create dev setup docs
-
-# TODO explain rules, admin limits, etc.
+- create dev setup docs
+- create database logic abstractions
+- readme for rules and how to use app
 
 ## Install ngrok for local development
 
